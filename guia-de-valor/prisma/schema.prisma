@@ -1,0 +1,452 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==========================================
+// 1. USUÁRIOS, PERFIS E ACESSOS
+// ==========================================
+
+model User {
+  id               String   @id @default(uuid())
+  name             String
+  email            String   @unique
+  passwordHash     String?  // Se for usar NextAuth com credenciais
+  
+  // Agente WhatsApp
+  whatsappNumber   String?  @unique
+  isWhatsappActive Boolean  @default(false)
+  
+  // Monetização
+  purchasedSlots   Int      @default(0) 
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspaces        UserWorkspace[]
+  pushSubscriptions PushSubscription[]
+  transactions      Transaction[]
+}
+
+model Workspace {
+  id              String   @id @default(uuid())
+  name            String
+  isDefault       Boolean  @default(false)
+  type            WorkspaceType @default(PERSONAL)
+  initialBalance  Float    @default(0) 
+  
+  createdAt       DateTime @default(now())
+
+  users                UserWorkspace[]
+  categories           Category[]
+  transactions         Transaction[]
+  recurringTransactions RecurringTransaction[]
+  creditCards          CreditCard[]
+  debts                Debt[]
+  reminders            Reminder[]
+  goals                Goal[]
+  investments          Investment[]
+  purchasePlans        PurchasePlan[]
+  shoppingListItems    ShoppingListItem[]
+  vehicles             Vehicle[]
+  maintenances         Maintenance[]
+}
+
+model UserWorkspace {
+  id          String   @id @default(uuid())
+  userId      String
+  workspaceId String
+  role        Role     @default(MEMBER)
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique 
+  p256dh    String   
+  auth      String   
+  userAgent String?  
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 2. CONFIGURAÇÕES FINANCEIRAS
+// ==========================================
+
+model Category {
+  id          String   @id @default(uuid())
+  workspaceId String
+  
+  name        String   
+  type        TransactionType 
+  icon        String   
+  iconType    IconType @default(UI_ICON)
+  isActive    Boolean  @default(true) 
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  transactions  Transaction[]
+  recurring     RecurringTransaction[]
+  debts         Debt[]
+  purchasePlans PurchasePlan[]
+
+  createdAt   DateTime @default(now())
+}
+
+model CreditCard {
+  id              String   @id @default(uuid())
+  workspaceId     String
+
+  name            String   
+  brand           String   
+  lastFourDigits  String?  
+  nameOnCard      String?  
+  limit           Float    
+  closingDay      Int      
+  dueDay          Int      
+  interestRate    Float?   
+  color           String   
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  transactions    Transaction[] 
+
+  createdAt       DateTime @default(now())
+}
+
+// ==========================================
+// 3. O MOTOR DE TRANSAÇÕES (FLUXO DE CAIXA)
+// ==========================================
+
+model Transaction {
+  id               String   @id @default(uuid())
+  workspaceId      String
+  userId           String
+  categoryId       String
+  
+  type             TransactionType
+  status           TransactionStatus 
+  amount           Float
+  description      String
+  date             DateTime 
+  paidAt           DateTime? 
+  
+  // Contas a Pagar/Receber
+  creditorContact  String?  
+  installmentGroup String?  
+  installmentIndex Int?     
+  totalInstallments Int?    
+
+  // Ligações Opcionais (Cartões, Dívidas, Recorrências, Investimentos)
+  creditCardId     String?
+  isInvoicePaid    Boolean @default(false)
+  recurringId      String?
+  debtId           String?
+  linkedInvestmentId String?
+
+  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [id])
+  category         Category  @relation(fields: [categoryId], references: [id])
+  creditCard       CreditCard? @relation(fields: [creditCardId], references: [id], onDelete: SetNull)
+  recurring        RecurringTransaction? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  debt             Debt? @relation(fields: [debtId], references: [id], onDelete: SetNull)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model RecurringTransaction {
+  id          String   @id @default(uuid())
+  workspaceId String
+  categoryId  String
+  
+  type        TransactionType 
+  description String
+  amount      Float
+  frequency   RecurrenceFrequency 
+  
+  startDate   DateTime 
+  nextDate    DateTime 
+  isActive    Boolean  @default(true) 
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  category    Category  @relation(fields: [categoryId], references: [id])
+  transactions Transaction[] 
+}
+
+model Debt {
+  id                String   @id @default(uuid())
+  workspaceId       String
+  categoryId        String?  
+  
+  creditor          String   
+  totalAmount       Float    
+  installmentAmount Float    
+  totalInstallments Int      
+  paidInstallments  Int      @default(0) 
+  startDate         DateTime 
+  
+  type              DebtType 
+  notes             String?  
+
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  category          Category? @relation(fields: [categoryId], references: [id])
+  transactions      Transaction[]
+
+  createdAt         DateTime @default(now())
+}
+
+// ==========================================
+// 4. MÓDULOS DE PLANEJAMENTO E GESTÃO
+// ==========================================
+
+model Reminder {
+  id          String   @id @default(uuid())
+  workspaceId String
+
+  title       String
+  date        DateTime 
+  hasTime     Boolean  @default(false) 
+  amount      Float?   
+  description String?  
+  isCompleted Boolean  @default(false) 
+
+  isRecurring Boolean  @default(false)
+  frequency   RecurrenceFrequency? 
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+}
+
+model Goal {
+  id            String   @id @default(uuid())
+  workspaceId   String
+
+  name          String   
+  type          GoalType 
+  targetAmount  Float    
+  currentAmount Float    @default(0) 
+  deadline      DateTime? 
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  purchasePlans PurchasePlan[]
+  
+  createdAt     DateTime @default(now())
+}
+
+model Investment {
+  id              String   @id @default(uuid())
+  workspaceId     String
+
+  name            String   
+  type            InvestmentType 
+  institution     String   
+  
+  initialAmount   Float    
+  currentAmount   Float    
+  goalAmount      Float?   
+  quantity        Float    
+  
+  startDate       DateTime
+  dueDate         DateTime? 
+  
+  expectedRate    Float?
+  rateType        RateType? 
+  hasIOF          Boolean  @default(false)
+  hasIR           Boolean  @default(false)
+  
+  notes           String?
+  status          InvestmentStatus @default(ACTIVE) 
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+}
+
+model PurchasePlan {
+  id              String   @id @default(uuid())
+  workspaceId     String
+  categoryId      String?
+  goalId          String?  
+
+  name            String   
+  description     String?  
+  totalAmount     Float    
+  savedAmount     Float    @default(0) 
+  monthsToSave    Int?     
+  deadline        DateTime? 
+  priority        PriorityLevel @default(MEDIUM)
+  notes           String?
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  category        Category? @relation(fields: [categoryId], references: [id])
+  goal            Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+}
+
+// ==========================================
+// 5. UTILITÁRIOS (SUPERMERCADO E VEÍCULOS)
+// ==========================================
+
+model ShoppingListItem {
+  id              String   @id @default(uuid())
+  workspaceId     String
+
+  name            String   
+  quantity        Float    
+  unit            MeasurementUnit @default(UNIT) 
+  estimatedPrice  Float?   
+  notes           String?  
+  isChecked       Boolean  @default(false) 
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+}
+
+model Vehicle {
+  id            String   @id @default(uuid())
+  workspaceId   String
+
+  type          VehicleType 
+  name          String   
+  plate         String?  
+  model         String?  
+  year          String?  
+  iconColor     String?  
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  maintenances  Maintenance[] 
+
+  createdAt     DateTime @default(now())
+}
+
+model Maintenance {
+  id            String   @id @default(uuid())
+  vehicleId     String
+  workspaceId   String
+
+  description   String   
+  scheduledDate DateTime 
+  completedDate DateTime? 
+  estimatedCost Float?   
+  actualCost    Float?   
+  status        MaintenanceStatus @default(SCHEDULED)
+  transactionId String?  
+
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+}
+
+// ==========================================
+// ENUMS (Listas de Valores Fixos)
+// ==========================================
+
+enum Role {
+  OWNER
+  MEMBER
+}
+
+enum WorkspaceType {
+  PERSONAL
+  BUSINESS
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum IconType {
+  UI_ICON
+  EMOJI
+}
+
+enum DebtType {
+  FIXED
+  RECURRING
+}
+
+enum GoalType {
+  ACCUMULATION   
+  EXPENSE_LIMIT  
+  INCOME_TARGET  
+}
+
+enum InvestmentType {
+  FIXA
+  ACOES
+  FUNDOS
+  CRIPTO
+  TESOURO
+  POUPANCA
+  COFRINHO
+}
+
+enum RateType {
+  MONTHLY
+  YEARLY
+}
+
+enum InvestmentStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum PriorityLevel {
+  LOW     
+  MEDIUM  
+  HIGH    
+}
+
+enum MeasurementUnit {
+  UNIT     
+  KG       
+  GRAMS    
+  LITER    
+  ML       
+  PACKAGE  
+  BOX      
+}
+
+enum VehicleType {
+  CAR
+  MOTORCYCLE
+  TRUCK
+  BICYCLE
+  OTHER
+}
+
+enum MaintenanceStatus {
+  SCHEDULED   
+  COMPLETED   
+  CANCELLED
+}
