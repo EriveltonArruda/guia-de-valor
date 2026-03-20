@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Calendar, Plus, Search, MoreVertical, Pencil, Trash2, ArrowUpRight, AlertTriangle } from "lucide-react";
-import NovaReceitaModal from "./NovaReceitaModal";
-import type { CreateReceitaState } from "./actions";
+import { Calendar, Plus, Search, MoreVertical, Pencil, Trash2, ArrowDownLeft, AlertTriangle } from "lucide-react";
+import NovaDespesaModal from "./NovaDespesaModal";
+import type { CreateDespesaState } from "./actions";
 
-type IncomeTx = {
+type ExpenseTx = {
   id: string;
   amount: number;
   description: string;
@@ -26,7 +26,7 @@ function formatBRL(value: number) {
   }).format(value);
 }
 
-function isRecurringTx(tx: IncomeTx) {
+function isRecurringTx(tx: ExpenseTx) {
   return tx.description.includes("Recorrente:");
 }
 
@@ -35,25 +35,25 @@ function daysDiff(a: Date, b: Date) {
   return ms / (1000 * 60 * 60 * 24);
 }
 
-export default function ReceitasClient({
+export default function DespesasClient({
   workspaceId,
   transactions,
   categories,
-  createReceitaAction,
-  deleteReceitaAction,
+  createDespesaAction,
+  deleteDespesaAction,
 }: {
   workspaceId: string | null;
-  transactions: IncomeTx[];
+  transactions: ExpenseTx[];
   categories: { id: string; name: string }[];
-  createReceitaAction: (
-    prevState: CreateReceitaState,
+  createDespesaAction: (
+    prevState: CreateDespesaState,
     formData: FormData,
-  ) => Promise<CreateReceitaState>;
-  deleteReceitaAction: (id: string) => Promise<{ ok: boolean; error?: string }>;
+  ) => Promise<CreateDespesaState>;
+  deleteDespesaAction: (id: string) => Promise<{ ok: boolean; error?: string }>;
 }) {
   const [tab, setTab] = React.useState<ActiveTab>("SIMPLES");
   const [openNova, setOpenNova] = React.useState(false);
-  const [txToEdit, setTxToEdit] = React.useState<IncomeTx | null>(null);
+  const [txToEdit, setTxToEdit] = React.useState<ExpenseTx | null>(null);
 
   const [openMenuId, setOpenMenuId] = React.useState<string | null>(null);
   const [txToDelete, setTxToDelete] = React.useState<string | null>(null);
@@ -100,8 +100,7 @@ export default function ReceitasClient({
     }
 
     if (statusFilter !== "Todas") {
-      // Correção de nomenclatura aplicada aqui!
-      const statusToMatch = statusFilter === "Recebidas" ? "PAID" : "PENDING";
+      const statusToMatch = statusFilter === "Pagas" ? "PAID" : "PENDING";
       result = result.filter((t) => t.status === statusToMatch);
     }
 
@@ -163,12 +162,12 @@ export default function ReceitasClient({
   const handleConfirmDelete = async () => {
     if (!txToDelete) return;
     setIsDeleting(true);
-    await deleteReceitaAction(txToDelete);
+    await deleteDespesaAction(txToDelete);
     setIsDeleting(false);
     setTxToDelete(null);
   };
 
-  const handleEdit = (t: IncomeTx) => {
+  const handleEdit = (t: ExpenseTx) => {
     setTxToEdit(t);
     setOpenMenuId(null);
     setOpenNova(true);
@@ -178,7 +177,7 @@ export default function ReceitasClient({
     <div className="max-w-6xl mx-auto w-full px-4 space-y-5 mt-2">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Receitas</h1>
+          <h1 className="text-3xl font-bold text-white">Despesas</h1>
           <p className="text-white/70 mt-1 text-sm">
             Total: {formatBRL(currentTotal)}
           </p>
@@ -251,7 +250,7 @@ export default function ReceitasClient({
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar Receitas..."
+              placeholder="Buscar Despesas..."
               className="w-full h-11 rounded-xl border border-white/10 bg-[#0b1220] text-white pl-10 pr-3 outline-none focus:ring-2 focus:ring-[#ED6936]/70 focus:border-[#ED6936]"
             />
           </div>
@@ -285,7 +284,7 @@ export default function ReceitasClient({
               className="h-11 rounded-xl border border-white/10 bg-[#0b1220] text-white px-3 outline-none focus:ring-2 focus:ring-[#ED6936]/70 focus:border-[#ED6936]"
             >
               <option value="Todas">Todas</option>
-              <option value="Recebidas">Recebidas</option>
+              <option value="Pagas">Pagas</option>
               <option value="Pendentes">Pendentes</option>
             </select>
           </div>
@@ -297,13 +296,13 @@ export default function ReceitasClient({
           {simpleTxs.length === 0 ? (
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-8 text-center">
               <div className="text-white font-semibold">
-                Nenhuma receita simples encontrada com esses filtros.
+                Nenhuma despesa simples encontrada com esses filtros.
               </div>
             </div>
           ) : (
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-4">
               <div className="text-xs text-white/60 mb-3">
-                {simpleTxs.length} receita(s)
+                {simpleTxs.length} despesa(s)
               </div>
               <div className="space-y-3">
                 {simpleTxs.map((t) => (
@@ -315,8 +314,8 @@ export default function ReceitasClient({
                     ].join(" ")}
                   >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-                        <ArrowUpRight className="h-5 w-5 text-emerald-500" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
+                        <ArrowDownLeft className="h-5 w-5 text-red-500" />
                       </div>
                       <div className="min-w-0">
                         <div className="text-white font-semibold truncate">
@@ -329,8 +328,8 @@ export default function ReceitasClient({
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <div className="text-emerald-500 font-bold whitespace-nowrap">
-                        {formatBRL(t.amount)}
+                      <div className="text-red-500 font-bold whitespace-nowrap">
+                        - {formatBRL(t.amount)}
                       </div>
                       <div className="relative">
                         <button
@@ -397,7 +396,7 @@ export default function ReceitasClient({
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5 md:col-span-2">
               <div className="flex items-center justify-between">
                 <div className="text-white font-bold">
-                  Receitas Recorrentes
+                  Despesas Recorrentes
                 </div>
                 <div className="text-white/70 text-sm">
                   {recurringTxs.length} itens
@@ -408,9 +407,9 @@ export default function ReceitasClient({
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
-              <div className="text-xs text-white/60">Total estimado</div>
-              <div className="text-emerald-500 font-bold mt-1">
-                {formatBRL(recurringTxs.reduce((acc, t) => acc + t.amount, 0))}
+              <div className="text-xs text-white/60">Total mensal estimado</div>
+              <div className="text-red-500 font-bold mt-1">
+                - {formatBRL(recurringTxs.reduce((acc, t) => acc + t.amount, 0))}
               </div>
             </div>
           </div>
@@ -418,13 +417,16 @@ export default function ReceitasClient({
           {recurringTxs.length === 0 ? (
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-8 text-center">
               <div className="text-white font-semibold">
-                Nenhuma receita recorrente encontrada com esses filtros.
+                Nenhuma despesa recorrente cadastrada
+              </div>
+              <div className="text-white/60 text-sm mt-1">
+                Ao criar uma despesa, marque como "Recorrente" para que ela apareça aqui.
               </div>
             </div>
           ) : (
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-4">
               <div className="text-xs text-white/60 mb-3">
-                {recurringTxs.length} receita(s) recorrente(s)
+                {recurringTxs.length} despesa(s) recorrente(s)
               </div>
               <div className="space-y-3">
                 {recurringTxs.map((t) => (
@@ -436,8 +438,8 @@ export default function ReceitasClient({
                     ].join(" ")}
                   >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-                        <ArrowUpRight className="h-5 w-5 text-emerald-500" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
+                        <ArrowDownLeft className="h-5 w-5 text-red-500" />
                       </div>
                       <div className="min-w-0">
                         <div className="text-white font-semibold truncate">
@@ -450,8 +452,8 @@ export default function ReceitasClient({
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <div className="text-emerald-500 font-bold whitespace-nowrap">
-                        {formatBRL(t.amount)}
+                      <div className="text-red-500 font-bold whitespace-nowrap">
+                        - {formatBRL(t.amount)}
                       </div>
                       <div className="relative">
                         <button
@@ -547,22 +549,22 @@ export default function ReceitasClient({
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
-              <div className="text-xs text-white/60">Total de receitas</div>
-              <div className="text-emerald-500 font-bold mt-2">
+              <div className="text-xs text-white/60">Total que você gastou</div>
+              <div className="text-red-500 font-bold mt-2">
                 {formatBRL(advancedTotals.total)}
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
               <div className="text-xs text-white/60">Média mensal</div>
-              <div className="text-emerald-500 font-bold mt-2">
+              <div className="text-red-500 font-bold mt-2">
                 {formatBRL(advancedTotals.avgMonthly)}
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
-              <div className="text-xs text-white/60">Maior receita</div>
-              <div className="text-emerald-500 font-bold mt-2">
+              <div className="text-xs text-white/60">Maior despesa</div>
+              <div className="text-red-500 font-bold mt-2">
                 {formatBRL(advancedTotals.highest)}
               </div>
             </div>
@@ -571,11 +573,11 @@ export default function ReceitasClient({
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
               <div className="text-sm font-bold text-white">
-                Receitas por Categoria
+                Despesas por Categoria
               </div>
               {byCategory.length === 0 ? (
                 <div className="mt-4 text-xs text-white/70">
-                  Nenhuma receita categorizada no período.
+                  Nenhuma despesa categorizada no período.
                 </div>
               ) : (
                 <div className="mt-4 space-y-2">
@@ -587,7 +589,7 @@ export default function ReceitasClient({
                       <div className="text-xs text-white/80 truncate">
                         {c.name}
                       </div>
-                      <div className="text-xs font-bold text-emerald-500">
+                      <div className="text-xs font-bold text-red-500">
                         {formatBRL(c.amount)}
                       </div>
                     </div>
@@ -598,11 +600,11 @@ export default function ReceitasClient({
 
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
               <div className="text-sm font-bold text-white">
-                Receitas Gerais do Período
+                Despesas Gerais
               </div>
               {rangeFiltered.length === 0 ? (
                 <div className="mt-4 text-xs text-white/70">
-                  Nenhuma receita no período selecionado.
+                  Nenhuma despesa no período selecionado.
                 </div>
               ) : (
                 <div className="mt-4 space-y-2">
@@ -614,7 +616,7 @@ export default function ReceitasClient({
                       <div className="text-xs text-white/80 truncate">
                         {t.description}
                       </div>
-                      <div className="text-xs font-bold text-emerald-500">
+                      <div className="text-xs font-bold text-red-500">
                         {formatBRL(t.amount)}
                       </div>
                     </div>
@@ -627,7 +629,7 @@ export default function ReceitasClient({
       )}
 
       {openNova && (
-        <NovaReceitaModal
+        <NovaDespesaModal
           open={openNova}
           onOpenChange={(open) => {
             setOpenNova(open);
@@ -635,7 +637,7 @@ export default function ReceitasClient({
           }}
           workspaceId={workspaceId ?? ""}
           categories={categories}
-          createReceitaAction={createReceitaAction}
+          createDespesaAction={createDespesaAction}
           initialData={txToEdit}
         />
       )}
@@ -651,9 +653,9 @@ export default function ReceitasClient({
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
                 <AlertTriangle className="h-6 w-6 text-red-500" />
               </div>
-              <h2 className="text-lg font-bold text-white">Excluir Receita?</h2>
+              <h2 className="text-lg font-bold text-white">Excluir Despesa?</h2>
               <p className="text-sm text-white/70">
-                Esta ação não pode ser desfeita. O valor será removido do seu saldo imediatamente.
+                Esta ação não pode ser desfeita.
               </p>
             </div>
             <div className="mt-6 flex gap-3">

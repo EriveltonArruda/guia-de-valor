@@ -22,6 +22,17 @@ export default async function ReceitasPage() {
     })
     : null;
 
+  const categories = workspace
+    ? await prisma.category.findMany({
+      where: {
+        workspaceId: workspace.id,
+        type: TransactionType.INCOME,
+      },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    })
+    : [];
+
   const transactions = workspace
     ? await prisma.transaction.findMany({
       where: {
@@ -37,6 +48,7 @@ export default async function ReceitasPage() {
         status: true, // NOVO: Trazendo o Status (PAID / PENDING)
         category: {
           select: {
+            id: true,
             name: true,
           },
         },
@@ -58,9 +70,11 @@ export default async function ReceitasPage() {
         description: t.description,
         date: t.date.toISOString().slice(0, 10),
         categoryName: t.category?.name ?? "Sem categoria",
+        categoryId: t.category?.id ?? null,
         userName: t.user?.name ?? "Membro Desconhecido", // Repassando para o Client
         status: t.status,
       }))}
+      categories={categories}
       createReceitaAction={createReceitaAction}
       deleteReceitaAction={deleteReceitaAction}
     />

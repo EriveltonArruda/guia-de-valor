@@ -3,10 +3,10 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { Calendar, Info, X } from "lucide-react";
-import type { CreateReceitaState } from "./actions";
+import type { CreateDespesaState } from "./actions";
 
 // Tipo para receber os dados na edição
-type IncomeTx = {
+type ExpenseTx = {
   id: string;
   amount: number;
   description: string;
@@ -15,23 +15,23 @@ type IncomeTx = {
   categoryId: string | null;
 };
 
-export default function NovaReceitaModal({
+export default function NovaDespesaModal({
   open,
   onOpenChange,
   workspaceId,
   categories,
-  createReceitaAction,
-  initialData, // NOVO: Dados iniciais para edição
+  createDespesaAction,
+  initialData,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workspaceId: string;
   categories: { id: string; name: string }[];
-  createReceitaAction: (
-    prevState: CreateReceitaState,
+  createDespesaAction: (
+    prevState: CreateDespesaState,
     formData: FormData,
-  ) => Promise<CreateReceitaState>;
-  initialData?: IncomeTx | null;
+  ) => Promise<CreateDespesaState>;
+  initialData?: ExpenseTx | null;
 }) {
   const [descricao, setDescricao] = React.useState("");
   const [valor, setValor] = React.useState("");
@@ -40,9 +40,9 @@ export default function NovaReceitaModal({
   const [observacoes, setObservacoes] = React.useState("");
   const [recorrente, setRecorrente] = React.useState(false);
   const [frequencia, setFrequencia] = React.useState("Mensal");
-  const initialState: CreateReceitaState = { ok: false };
+  const initialState: CreateDespesaState = { ok: false };
   const [state, formAction] = useActionState(
-    createReceitaAction,
+    createDespesaAction,
     initialState,
   );
 
@@ -91,12 +91,12 @@ export default function NovaReceitaModal({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-white">
-              {initialData ? "Editar Receita" : "Nova Receita"}
+              {initialData ? "Editar Despesa" : "Nova Despesa"}
             </h2>
             <p className="text-xs text-white/70 mt-1">
               {initialData
-                ? "Atualize os dados desta receita."
-                : "Preencha os dados para adicionar sua receita ao workspace."}
+                ? "Atualize os dados desta despesa."
+                : "Preencha os dados para adicionar sua despesa ao workspace."}
             </p>
           </div>
           <button
@@ -123,7 +123,7 @@ export default function NovaReceitaModal({
               name="descricao"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Ex: Salário"
+              placeholder="Ex: Conta de luz"
               className="w-full h-11 rounded-lg border border-white/15 bg-[#0b1220] text-white px-3 outline-none focus:ring-2 focus:ring-[#ED6936]/70 focus:border-[#ED6936]"
             />
           </div>
@@ -225,7 +225,7 @@ export default function NovaReceitaModal({
                 <div className="flex items-start gap-2 rounded-lg border border-[#ED6936]/25 bg-[#292B49]/50 p-3">
                   <Info className="h-4 w-4 text-[#ED6936]" />
                   <div className="text-xs text-white/80">
-                    Atenção: Esta receita será adicionada automaticamente no
+                    Atenção: Esta despesa será debitada automaticamente no
                     seu saldo.
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export default function NovaReceitaModal({
                   : "bg-[#ED6936] hover:bg-[#ED6936]/90 text-black",
               ].join(" ")}
             >
-              {initialData ? "Salvar Alterações" : "Salvar Receita"}
+              {initialData ? "Salvar Alterações" : "Salvar Despesa"}
             </button>
           </div>
         </form>

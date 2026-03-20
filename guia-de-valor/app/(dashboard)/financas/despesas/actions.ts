@@ -16,15 +16,15 @@ function parseBRCurrency(input: string) {
   return value;
 }
 
-export type CreateReceitaState = {
+export type CreateDespesaState = {
   ok: boolean;
   error?: string;
 };
 
-export async function createReceitaAction(
-  _prevState: CreateReceitaState,
+export async function createDespesaAction(
+  _prevState: CreateDespesaState,
   formData: FormData,
-): Promise<CreateReceitaState> {
+): Promise<CreateDespesaState> {
   const workspaceId = String(formData.get("workspaceId") ?? "").trim();
   const transactionId = String(formData.get("transactionId") ?? "").trim();
   const categoryId = String(formData.get("categoryId") ?? "").trim();
@@ -113,7 +113,7 @@ export async function createReceitaAction(
           userId: user.id,
           categoryId,
           accountId: account.id,
-          type: TransactionType.INCOME,
+          type: TransactionType.EXPENSE,
           status: TransactionStatus.PAID,
           amount,
           description: finalDescription,
@@ -124,26 +124,26 @@ export async function createReceitaAction(
       });
     }
   } catch (error) {
-    console.error("Erro ao salvar receita:", error);
-    return { ok: false, error: "Erro ao salvar receita no banco." };
+    console.error("Erro ao salvar despesa:", error);
+    return { ok: false, error: "Erro ao salvar despesa no banco." };
   }
 
-  revalidatePath("/financas/receitas");
+  revalidatePath("/financas/despesas");
   revalidatePath("/");
 
   return { ok: true };
 }
 
-export async function deleteReceitaAction(id: string) {
+export async function deleteDespesaAction(id: string) {
   try {
     await prisma.transaction.delete({
       where: { id }
     });
-    revalidatePath("/financas/receitas");
+    revalidatePath("/financas/despesas");
     revalidatePath("/");
     return { ok: true };
   } catch (error) {
-    console.error("Erro ao deletar receita:", error);
-    return { ok: false, error: "Erro ao deletar receita." };
+    console.error("Erro ao deletar despesa:", error);
+    return { ok: false, error: "Erro ao deletar despesa." };
   }
 }
