@@ -28,33 +28,34 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  workspaces        UserWorkspace[]
+  workspaces       UserWorkspace[]
   pushSubscriptions PushSubscription[]
-  transactions      Transaction[]
+  transactions     Transaction[]
 }
 
 model Workspace {
-  id              String   @id @default(uuid())
-  name            String
-  isDefault       Boolean  @default(false)
-  type            WorkspaceType @default(PERSONAL)
-  initialBalance  Float    @default(0) 
+  id                String   @id @default(uuid())
+  name              String
+  isDefault         Boolean  @default(false)
+  type              WorkspaceType @default(PERSONAL)
+  initialBalance    Float    @default(0) 
   
-  createdAt       DateTime @default(now())
+  createdAt         DateTime @default(now())
 
-  users                UserWorkspace[]
-  categories           Category[]
-  transactions         Transaction[]
+  users             UserWorkspace[]
+  categories        Category[]
+  transactions      Transaction[]
+  accounts          Account[] // 🚀 Ligação com as contas bancárias
   recurringTransactions RecurringTransaction[]
-  creditCards          CreditCard[]
-  debts                Debt[]
-  reminders            Reminder[]
-  goals                Goal[]
-  investments          Investment[]
-  purchasePlans        PurchasePlan[]
-  shoppingListItems    ShoppingListItem[]
-  vehicles             Vehicle[]
-  maintenances         Maintenance[]
+  creditCards       CreditCard[]
+  debts             Debt[]
+  reminders         Reminder[]
+  goals             Goal[]
+  investments       Investment[]
+  purchasePlans     PurchasePlan[]
+  shoppingListItems ShoppingListItem[]
+  vehicles          Vehicle[]
+  maintenances      Maintenance[]
 }
 
 model UserWorkspace {
@@ -106,6 +107,23 @@ model Category {
   createdAt   DateTime @default(now())
 }
 
+// 🚀 NOVA TABELA: Contas Bancárias / Caixa
+model Account {
+  id            String   @id @default(uuid())
+  workspaceId   String
+
+  name          String   // Ex: "Nubank", "Caixa da Barbearia"
+  type          AccountType 
+  initialBalance Float   @default(0) 
+  color         String?  
+  isActive      Boolean  @default(true)
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  transactions  Transaction[]
+
+  createdAt     DateTime @default(now())
+}
+
 model CreditCard {
   id              String   @id @default(uuid())
   workspaceId     String
@@ -135,6 +153,7 @@ model Transaction {
   workspaceId      String
   userId           String
   categoryId       String
+  accountId        String   // 🚀 De qual conta saiu/entrou o dinheiro?
   
   type             TransactionType
   status           TransactionStatus 
@@ -143,13 +162,18 @@ model Transaction {
   date             DateTime 
   paidAt           DateTime? 
   
+  // 🚀 NOVOS CAMPOS PARA O WHATSAPP/IA
+  source           TransactionSource @default(WEB) 
+  aiConfidence     Float?    // Grau de certeza da IA (0 a 100)
+  needsReview      Boolean   @default(false) // Se a IA ficar em dúvida
+  
   // Contas a Pagar/Receber
   creditorContact  String?  
   installmentGroup String?  
   installmentIndex Int?     
   totalInstallments Int?    
 
-  // Ligações Opcionais (Cartões, Dívidas, Recorrências, Investimentos)
+  // Ligações Opcionais
   creditCardId     String?
   isInvoicePaid    Boolean @default(false)
   recurringId      String?
@@ -159,6 +183,7 @@ model Transaction {
   workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user             User      @relation(fields: [userId], references: [id])
   category         Category  @relation(fields: [categoryId], references: [id])
+  account          Account   @relation(fields: [accountId], references: [id]) // 🚀 Ligação com a Conta
   creditCard       CreditCard? @relation(fields: [creditCardId], references: [id], onDelete: SetNull)
   recurring        RecurringTransaction? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
   debt             Debt? @relation(fields: [debtId], references: [id], onDelete: SetNull)
@@ -319,20 +344,20 @@ model ShoppingListItem {
 }
 
 model Vehicle {
-  id            String   @id @default(uuid())
-  workspaceId   String
+  id          String   @id @default(uuid())
+  workspaceId String
 
-  type          VehicleType 
-  name          String   
-  plate         String?  
-  model         String?  
-  year          String?  
-  iconColor     String?  
+  type        VehicleType 
+  name        String   
+  plate       String?  
+  model       String?  
+  year        String?  
+  iconColor   String?  
 
-  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   maintenances  Maintenance[] 
 
-  createdAt     DateTime @default(now())
+  createdAt   DateTime @default(now())
 }
 
 model Maintenance {
@@ -449,4 +474,18 @@ enum MaintenanceStatus {
   SCHEDULED   
   COMPLETED   
   CANCELLED
+}
+
+// 🚀 NOVOS ENUMS ADICIONADOS AQUI
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CASH
+  INVESTMENT
+}
+
+enum TransactionSource {
+  WEB
+  APP
+  WHATSAPP
 }

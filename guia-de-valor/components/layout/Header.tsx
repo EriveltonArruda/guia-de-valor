@@ -1,9 +1,17 @@
 "use client";
 
-import { Bell, Moon, Sun, User } from "lucide-react";
+import { Bell, Moon, Sun, LogOut, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { logout } from "@/app/actions"; // 🚀 Importação do motor de logout
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const { setTheme, theme } = useTheme();
@@ -19,7 +27,7 @@ export function Header() {
           <div className="flex flex-col">
             <h2 className="text-lg font-bold text-foreground leading-tight">Dashboard</h2>
             <span className="text-sm text-muted-foreground font-medium leading-tight">
-              Bem-vindo(a) de volta!
+              Bem-vindo(a) de volta, Erivelton Rodrigues!
             </span>
           </div>
         )}
@@ -45,9 +53,33 @@ export function Header() {
 
         <div className="h-6 w-px bg-border mx-2"></div>
 
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full bg-muted hover:bg-muted/80 text-foreground">
-          <User className="h-4 w-4" />
-        </Button>
+        {/* Avatar e Menu Dropdown Substituindo o antigo botão de User */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full bg-[#cce833] hover:bg-[#b5cc2d]">
+              <span className="text-xs font-bold text-black">ER</span>
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            {/* Nosso motor de Sair embutido no item do menu */}
+            <DropdownMenuItem asChild>
+              <form action={logout} className="w-full">
+                <button type="submit" className="flex w-full items-center text-red-500 cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </button>
+              </form>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

@@ -1,28 +1,68 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp } from "lucide-react";
+import { TransactionType } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
+import ReceitasClient from "@/app/(dashboard)/financas/receitas/ReceitasClient";
+import { createReceitaAction, deleteReceitaAction } from "@/app/(dashboard)/financas/receitas/actions";
 
-export default function ReceitasPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ReceitasPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const workspace = user
+    ? await prisma.workspace.findFirst({
+      where: {
+        users: { some: { userId: user.id } },
+      },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+      select: { id: true, type: true, initialBalance: true },
+    })
+    : null;
+
+  const transactions = workspace
+    ? await prisma.transaction.findMany({
+      where: {
+        workspaceId: workspace.id,
+        type: TransactionType.INCOME,
+      },
+      orderBy: { date: "desc" },
+      select: {
+        id: true,
+        amount: true,
+        description: true,
+        date: true,
+        status: true, // NOVO: Trazendo o Status (PAID / PENDING)
+        category: {
+          select: {
+            name: true,
+          },
+        },
+        user: { // NOVO: Trazendo o Nome do Membro que cadastrou
+          select: {
+            name: true,
+          },
+        },
+      },
+    })
+    : [];
+
   return (
-    <div className="space-y-6 mt-2">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Receitas</h1>
-        <p className="text-muted-foreground">
-          Gerencie todas as suas entradas de dinheiro nesta tela.
-        </p>
-      </div>
-
-      <Card className="max-w-md">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total de Receitas (Exemplo)</CardTitle>
-          <TrendingUp className="h-4 w-4 text-[#ED6936]" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-[#ED6936]">+ R$ 5.432,00</div>
-          <p className="text-xs text-muted-foreground">
-            Página de teste para validar a navegação da Sidebar.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <ReceitasClient
+      workspaceId={workspace?.id ?? null}
+      transactions={transactions.map((t) => ({
+        id: t.id,
+        amount: t.amount,
+        description: t.description,
+        date: t.date.toISOString().slice(0, 10),
+        categoryName: t.category?.name ?? "Sem categoria",
+        userName: t.user?.name ?? "Membro Desconhecido", // Repassando para o Client
+        status: t.status,
+      }))}
+      createReceitaAction={createReceitaAction}
+      deleteReceitaAction={deleteReceitaAction}
+    />
   );
 }

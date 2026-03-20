@@ -1,7 +1,88 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDownCircle, ArrowUpCircle, Wallet } from "lucide-react";
+import { TransactionType } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const formatBRL = (value: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+  let saldoTotal = 0;
+
+  // Regra: se não tiver usuário logado ou não existir workspace/transações,
+  // não quebra a página e retorna 0 nos cards.
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: supabaseError,
+  } = await supabase.auth.getUser();
+
+  if (user && !supabaseError) {
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        users: {
+          some: {
+            userId: user.id,
+          },
+        },
+      },
+      // Preferir workspace "default", depois o mais recente.
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        initialBalance: true,
+      },
+    });
+
+    if (workspace) {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfNextMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        1,
+      );
+
+      const [incomeAgg, expenseAgg] = await Promise.all([
+        prisma.transaction.aggregate({
+          _sum: { amount: true },
+          where: {
+            workspaceId: workspace.id,
+            type: TransactionType.INCOME,
+            date: {
+              gte: startOfMonth,
+              lt: startOfNextMonth,
+            },
+          },
+        }),
+        prisma.transaction.aggregate({
+          _sum: { amount: true },
+          where: {
+            workspaceId: workspace.id,
+            type: TransactionType.EXPENSE,
+            date: {
+              gte: startOfMonth,
+              lt: startOfNextMonth,
+            },
+          },
+        }),
+      ]);
+
+      totalIncome = incomeAgg._sum.amount ?? 0;
+      totalExpense = expenseAgg._sum.amount ?? 0;
+      // Regra solicitada: (Receitas - Despesas) + initialBalance do workspace
+      saldoTotal = totalIncome - totalExpense + (workspace.initialBalance ?? 0);
+    }
+  }
+
   return (
     <div className="space-y-6 mt-2">
       {/* Grid com os 3 Cards Principais */}
@@ -13,7 +94,7 @@ export default function DashboardPage() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 15.231,89</div>
+            <div className="text-2xl font-bold">{formatBRL(saldoTotal)}</div>
             <p className="text-xs text-muted-foreground">
               Atualizado agora
             </p>
@@ -27,7 +108,9 @@ export default function DashboardPage() {
             <ArrowUpCircle className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-500">+ R$ 5.432,00</div>
+            <div className="text-2xl font-bold text-emerald-500">
+              + {formatBRL(totalIncome)}
+            </div>
             <p className="text-xs text-muted-foreground">
               Valor recebido até o momento
             </p>
@@ -41,7 +124,9 @@ export default function DashboardPage() {
             <ArrowDownCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">- R$ 2.145,00</div>
+            <div className="text-2xl font-bold text-red-500">
+              - {formatBRL(totalExpense)}
+            </div>
             <p className="text-xs text-muted-foreground">
               Valor gasto até o momento
             </p>
