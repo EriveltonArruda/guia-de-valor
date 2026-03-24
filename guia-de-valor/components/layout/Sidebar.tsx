@@ -39,11 +39,13 @@ import {
 // Mapeamento 100% fiel ao modelo GestorMoney
 const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/" },
+  /*
   {
     name: "Utilidades",
     icon: Sparkles,
     subItems: []
   },
+  */
   {
     name: "Finanças",
     icon: ArrowRightLeft,
@@ -51,10 +53,13 @@ const menuItems = [
       { name: 'Patrimônio "Conta"', href: "/financas/patrimonio", icon: Wallet },
       { name: "Receitas", href: "/financas/receitas", icon: TrendingUp },
       { name: "Despesas", href: "/financas/despesas", icon: TrendingDown },
+      /*
       { name: "Transações", href: "/financas/transacoes", icon: ArrowRightLeft },
       { name: "Cartões de Crédito", href: "/financas/cartoes", icon: CreditCard },
+      */
     ]
   },
+  /*
   {
     name: "Contas",
     icon: CalendarDays,
@@ -77,16 +82,20 @@ const menuItems = [
       { name: "Veículos", href: "/planejar/veiculos", icon: Car },
     ]
   },
+  */
   {
     name: "Gestão",
     icon: FileText,
     subItems: [
       { name: "Categorias", href: "/gestao/categorias", icon: Tags },
+      /*
       { name: "Relatórios", href: "/gestao/relatorios", icon: FileText },
       { name: "Exportar Dados", href: "/gestao/exportar", icon: Download },
       { name: "Perfis Financeiros", href: "/gestao/perfis", icon: Users },
+      */
     ]
   },
+  /*
   {
     name: "Mais",
     icon: MoreHorizontal,
@@ -97,6 +106,7 @@ const menuItems = [
       { name: "Configurações", href: "/mais/configuracoes", icon: Settings },
     ]
   },
+  */
 ];
 
 export function Sidebar() {

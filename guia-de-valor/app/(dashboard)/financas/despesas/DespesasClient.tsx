@@ -1,9 +1,28 @@
 "use client";
 
 import * as React from "react";
-import { Calendar, Plus, Search, MoreVertical, Pencil, Trash2, ArrowDownLeft, AlertTriangle } from "lucide-react";
+import { 
+  Calendar, Plus, Search, MoreVertical, Pencil, Trash2, AlertTriangle, ArrowDownLeft,
+  CreditCard, Wallet, PiggyBank, TrendingUp, DollarSign, Banknote, Receipt, Landmark,
+  ShoppingCart, ShoppingBag, Store, Gift, Tag, Shirt, Gem, Clock, Utensils, UtensilsCrossed,
+  Coffee, Pizza, Beer, Car, Bus, Train, Fuel, Bike, Plane, Ship, Home, Zap, Droplet, Flame,
+  Wifi, Lightbulb, Wrench, Key, Smartphone, Laptop, Tv, Headphones, Camera, Gamepad2, Heart,
+  Pill, Dumbbell, Scissors, GraduationCap, Book, Newspaper, Music, Film, Palette, Globe,
+  Star, Briefcase, Users, Award, Trophy, Target, Baby, PawPrint, User, Folder, FileText,
+  Bell, Mail, Phone, Shield
+} from "lucide-react";
 import NovaDespesaModal from "./NovaDespesaModal";
 import type { CreateDespesaState } from "./actions";
+
+const IconMap: Record<string, React.ElementType> = {
+  CreditCard, Wallet, PiggyBank, TrendingUp, DollarSign, Banknote, Receipt, Landmark,
+  ShoppingCart, ShoppingBag, Store, Gift, Tag, Shirt, Gem, Clock, Utensils, UtensilsCrossed,
+  Coffee, Pizza, Beer, Car, Bus, Train, Fuel, Bike, Plane, Ship, Home, Zap, Droplet, Flame,
+  Wifi, Lightbulb, Wrench, Key, Smartphone, Laptop, Tv, Headphones, Camera, Gamepad2, Heart,
+  Pill, Dumbbell, Scissors, GraduationCap, Book, Newspaper, Music, Film, Palette, Globe,
+  Star, Briefcase, Users, Award, Trophy, Target, Baby, PawPrint, User, Folder, FileText,
+  Calendar, Bell, Mail, Phone, Shield
+};
 
 type ExpenseTx = {
   id: string;
@@ -26,6 +45,12 @@ function formatBRL(value: number) {
     currency: "BRL",
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function formatDateBR(dateString: string) {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year}`;
 }
 
 function isRecurringTx(tx: ExpenseTx) {
@@ -73,6 +98,13 @@ export default function DespesasClient({
   );
   const [endDate, setEndDate] = React.useState(new Date().toISOString().slice(0, 10));
 
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 10;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [query, categoryFilter, memberFilter, statusFilter, tab]);
+
   const uniqueCategories = React.useMemo(() => {
     return Array.from(new Set(transactions.map((t) => t.categoryName).filter(Boolean))) as string[];
   }, [transactions]);
@@ -114,16 +146,23 @@ export default function DespesasClient({
     [baseFilteredTxs],
   );
 
+  const paginatedSimpleTxs = React.useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return simpleTxs.slice(start, start + itemsPerPage);
+  }, [simpleTxs, currentPage]);
+
+  const totalPages = Math.ceil(simpleTxs.length / itemsPerPage);
+
   const recurringTxs = React.useMemo(
     () => baseFilteredTxs.filter(isRecurringTx),
     [baseFilteredTxs],
   );
 
   const rangeFiltered = React.useMemo(() => {
-    const start = startDate ? new Date(startDate + "T00:00:00") : null;
+    const start = startDate ? new Date(startDate + "T12:00:00") : null;
     const end = endDate ? new Date(endDate + "T23:59:59") : null;
     return baseFilteredTxs.filter((t) => {
-      const dt = new Date(t.date + "T00:00:00");
+      const dt = new Date(t.date + "T12:00:00");
       if (start && dt < start) return false;
       if (end && dt > end) return false;
       return true;
@@ -135,7 +174,7 @@ export default function DespesasClient({
     const highest = rangeFiltered.reduce((acc, t) => Math.max(acc, t.amount), 0);
     const count = rangeFiltered.length;
 
-    const start = startDate ? new Date(startDate + "T00:00:00") : null;
+    const start = startDate ? new Date(startDate + "T12:00:00") : null;
     const end = endDate ? new Date(endDate + "T23:59:59") : null;
     const months = start && end ? Math.max(1, daysDiff(start, end) / 30) : 1;
     const avgMonthly = total / months;
@@ -307,7 +346,7 @@ export default function DespesasClient({
                 {simpleTxs.length} despesa(s)
               </div>
               <div className="space-y-3">
-                {simpleTxs.map((t) => (
+                {paginatedSimpleTxs.map((t) => (
                   <div
                     key={t.id}
                     className={[
@@ -319,6 +358,8 @@ export default function DespesasClient({
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
                         {t.categoryIconType === "EMOJI" && t.categoryIcon ? (
                           <span className="text-xl">{t.categoryIcon}</span>
+                        ) : t.categoryIconType === "UI_ICON" && t.categoryIcon && IconMap[t.categoryIcon] ? (
+                          React.createElement(IconMap[t.categoryIcon], { className: "h-5 w-5 text-red-500" })
                         ) : (
                           <ArrowDownLeft className="h-5 w-5 text-red-500" />
                         )}
@@ -328,7 +369,7 @@ export default function DespesasClient({
                           {t.description}
                         </div>
                         <div className="text-xs text-white/60 mt-0.5">
-                          {t.categoryName ?? "Sem categoria"} • {t.date} • {t.userName}
+                          {t.categoryName ?? "Sem categoria"} • {formatDateBR(t.date)} • {t.userName}
                         </div>
                       </div>
                     </div>
@@ -391,6 +432,28 @@ export default function DespesasClient({
                   </div>
                 ))}
               </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className="px-3 py-1.5 rounded-lg border border-white/10 bg-[#0b1220] text-sm text-white hover:bg-white/5 disabled:opacity-50 transition"
+                  >
+                    Anterior
+                  </button>
+                  <div className="text-sm text-white/60">
+                    Página {currentPage} de {totalPages}
+                  </div>
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className="px-3 py-1.5 rounded-lg border border-white/10 bg-[#0b1220] text-sm text-white hover:bg-white/5 disabled:opacity-50 transition"
+                  >
+                    Próximo
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -447,6 +510,8 @@ export default function DespesasClient({
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
                         {t.categoryIconType === "EMOJI" && t.categoryIcon ? (
                           <span className="text-xl">{t.categoryIcon}</span>
+                        ) : t.categoryIconType === "UI_ICON" && t.categoryIcon && IconMap[t.categoryIcon] ? (
+                          React.createElement(IconMap[t.categoryIcon], { className: "h-5 w-5 text-red-500" })
                         ) : (
                           <ArrowDownLeft className="h-5 w-5 text-red-500" />
                         )}
@@ -456,7 +521,7 @@ export default function DespesasClient({
                           {t.description}
                         </div>
                         <div className="text-xs text-white/60 mt-0.5">
-                          {t.categoryName ?? "Sem categoria"} • {t.date} • {t.userName}
+                          {t.categoryName ?? "Sem categoria"} • {formatDateBR(t.date)} • {t.userName}
                         </div>
                       </div>
                     </div>
