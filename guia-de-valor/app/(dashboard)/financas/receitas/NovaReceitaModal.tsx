@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import { Calendar, Info, X } from "lucide-react";
+import { Calendar, Info, X, icons, Folder, ChevronDown } from "lucide-react";
 import type { CreateReceitaState } from "./actions";
 
 // Tipo para receber os dados na edição
@@ -26,7 +26,7 @@ export default function NovaReceitaModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workspaceId: string;
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; icon: string | null; iconType: string | null }[];
   createReceitaAction: (
     prevState: CreateReceitaState,
     formData: FormData,
@@ -40,6 +40,8 @@ export default function NovaReceitaModal({
   const [observacoes, setObservacoes] = React.useState("");
   const [recorrente, setRecorrente] = React.useState(false);
   const [frequencia, setFrequencia] = React.useState("Mensal");
+  const [isCategoryOpen, setIsCategoryOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
   const initialState: CreateReceitaState = { ok: false };
   const [state, formAction] = useActionState(
     createReceitaAction,
@@ -72,6 +74,16 @@ export default function NovaReceitaModal({
   }, [open, initialData]);
 
   const submitDisabled = !descricao.trim() || !valor.trim() || !data || !categoryId;
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsCategoryOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (!open) return null;
 
@@ -156,23 +168,80 @@ export default function NovaReceitaModal({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2" ref={dropdownRef}>
             <label className="text-sm font-semibold text-white">Categoria</label>
-            <select
-              name="categoryId"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full h-11 rounded-lg border border-white/15 bg-[#0b1220] text-white px-3 outline-none focus:ring-2 focus:ring-[#ED6936]/70 focus:border-[#ED6936]"
-            >
-              {categories.length === 0 && (
-                <option value="">Sem categoria cadastrada</option>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                className="w-full h-11 flex items-center justify-between rounded-lg border border-white/15 bg-[#0b1220] text-white px-3 outline-none focus:ring-2 focus:ring-[#ED6936]/70 focus:border-[#ED6936] transition-all"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  {categoryId ? (
+                    (() => {
+                      const selected = categories.find((c) => c.id === categoryId);
+                      if (!selected) return <span className="text-white/50">Selecione uma categoria</span>;
+                      
+                      let IconPreview = null;
+                      if (selected.iconType === "EMOJI" && selected.icon) {
+                        IconPreview = <span className="text-lg leading-none">{selected.icon}</span>;
+                      } else if (selected.iconType === "UI_ICON" && selected.icon) {
+                        const LucideIcon = icons[selected.icon as keyof typeof icons] as React.ElementType || Folder;
+                        IconPreview = <LucideIcon className="h-4 w-4 text-[#ED6936]" />;
+                      }
+                      
+                      return (
+                        <>
+                          {IconPreview}
+                          <span>{selected.name}</span>
+                        </>
+                      );
+                    })()
+                  ) : (
+                    <span className="text-white/50">Selecione uma categoria</span>
+                  )}
+                </div>
+                <ChevronDown className={`h-4 w-4 text-white/50 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isCategoryOpen && (
+                <div className="absolute top-full left-0 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-white/10 bg-[#0b1220] py-1 z-60 shadow-xl customize-scrollbar">
+                  {categories.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-white/50">Sem categoria cadastrada</div>
+                  ) : (
+                    categories.map((c) => {
+                      let IconPreview = null;
+                      if (c.iconType === "EMOJI" && c.icon) {
+                        IconPreview = <span className="text-lg leading-none w-5 text-center">{c.icon}</span>;
+                      } else if (c.iconType === "UI_ICON" && c.icon) {
+                        const LucideIcon = icons[c.icon as keyof typeof icons] as React.ElementType || Folder;
+                        IconPreview = <LucideIcon className="h-4 w-4 text-white/70" />;
+                      }
+
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            setCategoryId(c.id);
+                            setIsCategoryOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-white/5 ${
+                            categoryId === c.id ? "bg-white/5 text-[#ED6936]" : "text-white"
+                          }`}
+                        >
+                          <div className="w-5 flex justify-center items-center text-[#ED6936]">
+                            {IconPreview}
+                          </div>
+                          <span className="truncate">{c.name}</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
               )}
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            </div>
+            <input type="hidden" name="categoryId" value={categoryId} />
           </div>
 
           <div className="space-y-2">
@@ -271,6 +340,21 @@ export default function NovaReceitaModal({
           </div>
         </form>
       </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        .customize-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .customize-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .customize-scrollbar::-webkit-scrollbar-thumb {
+          background-color: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .customize-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: rgba(255, 255, 255, 0.2);
+        }
+      `}} />
     </div>
   );
 }

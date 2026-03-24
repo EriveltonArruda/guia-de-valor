@@ -29,7 +29,7 @@ export default async function ReceitasPage() {
         type: TransactionType.INCOME,
       },
       orderBy: { name: "asc" },
-      select: { id: true, name: true },
+      select: { id: true, name: true, icon: true, iconType: true },
     })
     : [];
 
@@ -50,6 +50,8 @@ export default async function ReceitasPage() {
           select: {
             id: true,
             name: true,
+            icon: true,
+            iconType: true,
           },
         },
         user: { // NOVO: Trazendo o Nome do Membro que cadastrou
@@ -71,6 +73,8 @@ export default async function ReceitasPage() {
         date: t.date.toISOString().slice(0, 10),
         categoryName: t.category?.name ?? "Sem categoria",
         categoryId: t.category?.id ?? null,
+        categoryIcon: t.category?.icon ?? null,
+        categoryIconType: t.category?.iconType ?? null,
         userName: t.user?.name ?? "Membro Desconhecido", // Repassando para o Client
         status: t.status,
       }))}

@@ -12,6 +12,8 @@ type ExpenseTx = {
   date: string;
   categoryName: string | null;
   categoryId: string | null;
+  categoryIcon: string | null;
+  categoryIconType: string | null;
   userName: string;
   status: string;
 };
@@ -44,7 +46,7 @@ export default function DespesasClient({
 }: {
   workspaceId: string | null;
   transactions: ExpenseTx[];
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; icon: string | null; iconType: string | null }[];
   createDespesaAction: (
     prevState: CreateDespesaState,
     formData: FormData,
@@ -315,7 +317,11 @@ export default function DespesasClient({
                   >
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                        <ArrowDownLeft className="h-5 w-5 text-red-500" />
+                        {t.categoryIconType === "EMOJI" && t.categoryIcon ? (
+                          <span className="text-xl">{t.categoryIcon}</span>
+                        ) : (
+                          <ArrowDownLeft className="h-5 w-5 text-red-500" />
+                        )}
                       </div>
                       <div className="min-w-0">
                         <div className="text-white font-semibold truncate">
@@ -439,7 +445,11 @@ export default function DespesasClient({
                   >
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                        <ArrowDownLeft className="h-5 w-5 text-red-500" />
+                        {t.categoryIconType === "EMOJI" && t.categoryIcon ? (
+                          <span className="text-xl">{t.categoryIcon}</span>
+                        ) : (
+                          <ArrowDownLeft className="h-5 w-5 text-red-500" />
+                        )}
                       </div>
                       <div className="min-w-0">
                         <div className="text-white font-semibold truncate">

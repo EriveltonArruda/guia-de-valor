@@ -13,18 +13,149 @@ type CategoryData = {
   iconType: string;
 };
 
-const LUCIDE_ICONS_MOCK = [
-  "Building2", "Home", "GraduationCap", "Briefcase", "Dices", "Wallet",
-  "Car", "Monitor", "Users", "Gamepad2", "Megaphone", "ShoppingCart",
-  "Wrench", "HeartPulse", "Wifi", "Package", "Scissors", "Coffee",
-  "Shirt", "PiggyBank", "Plane", "Train", "Stethoscope", "Flame"
+const LUCIDE_ICONS_CATEGORIZED = [
+  {
+    category: "Finanças",
+    icons: [
+      { name: "CreditCard", label: "Cartão" },
+      { name: "Wallet", label: "Carteira" },
+      { name: "PiggyBank", label: "Poupança" },
+      { name: "TrendingUp", label: "Investimento" },
+      { name: "DollarSign", label: "Dinheiro" },
+      { name: "Banknote", label: "Cédula" },
+      { name: "Receipt", label: "Recibo" },
+      { name: "Landmark", label: "Banco" },
+    ],
+  },
+  {
+    category: "Compras",
+    icons: [
+      { name: "ShoppingCart", label: "Carrinho" },
+      { name: "ShoppingBag", label: "Sacola" },
+      { name: "Store", label: "Loja" },
+      { name: "Gift", label: "Presente" },
+      { name: "Tag", label: "Etiqueta" },
+      { name: "Shirt", label: "Roupa" },
+      { name: "Gem", label: "Jóia" },
+      { name: "Clock", label: "Relógio" },
+    ],
+  },
+  {
+    category: "Alimentação",
+    icons: [
+      { name: "Utensils", label: "Restaurante" },
+      { name: "UtensilsCrossed", label: "Refeição" },
+      { name: "Coffee", label: "Café" },
+      { name: "Pizza", label: "Pizza" },
+      { name: "Beer", label: "Bebida" },
+    ],
+  },
+  {
+    category: "Transporte",
+    icons: [
+      { name: "Car", label: "Carro" },
+      { name: "Bus", label: "Ônibus" },
+      { name: "Train", label: "Trem" },
+      { name: "Fuel", label: "Combustível" },
+      { name: "Bike", label: "Bicicleta" },
+      { name: "Plane", label: "Avião" },
+      { name: "Ship", label: "Barco" },
+    ],
+  },
+  {
+    category: "Casa",
+    icons: [
+      { name: "Home", label: "Casa" },
+      { name: "Zap", label: "Energia" },
+      { name: "Droplet", label: "Água" },
+      { name: "Flame", label: "Gás" },
+      { name: "Wifi", label: "Internet" },
+      { name: "Lightbulb", label: "Luz" },
+      { name: "Wrench", label: "Manutenção" },
+      { name: "Key", label: "Aluguel" },
+    ],
+  },
+  {
+    category: "Tecnologia",
+    icons: [
+      { name: "Smartphone", label: "Celular" },
+      { name: "Laptop", label: "Notebook" },
+      { name: "Tv", label: "TV" },
+      { name: "Headphones", label: "Fones" },
+      { name: "Camera", label: "Câmera" },
+      { name: "Gamepad2", label: "Games" },
+    ],
+  },
+  {
+    category: "Saúde",
+    icons: [
+      { name: "Heart", label: "Saúde" },
+      { name: "Pill", label: "Remédio" },
+      { name: "Dumbbell", label: "Academia" },
+      { name: "Scissors", label: "Beleza" },
+    ],
+  },
+  {
+    category: "Educação",
+    icons: [
+      { name: "GraduationCap", label: "Formação" },
+      { name: "Book", label: "Livro" },
+      { name: "Newspaper", label: "Jornal" },
+    ],
+  },
+  {
+    category: "Lazer",
+    icons: [
+      { name: "Music", label: "Música" },
+      { name: "Film", label: "Cinema" },
+      { name: "Palette", label: "Arte" },
+      { name: "Globe", label: "Viagem" },
+      { name: "Star", label: "Favorito" },
+    ],
+  },
+  {
+    category: "Trabalho",
+    icons: [
+      { name: "Briefcase", label: "Trabalho" },
+      { name: "Users", label: "Equipe" },
+      { name: "Award", label: "Prêmio" },
+      { name: "Trophy", label: "Troféu" },
+      { name: "Target", label: "Meta" },
+    ],
+  },
+  {
+    category: "Família",
+    icons: [
+      { name: "Baby", label: "Bebê" },
+      { name: "PawPrint", label: "Pet" },
+      { name: "User", label: "Pessoa" },
+    ],
+  },
+  {
+    category: "Outros",
+    icons: [
+      { name: "Folder", label: "Pasta" },
+      { name: "FileText", label: "Documento" },
+      { name: "Calendar", label: "Agenda" },
+      { name: "Bell", label: "Lembrete" },
+      { name: "Mail", label: "E-mail" },
+      { name: "Phone", label: "Telefone" },
+      { name: "Shield", label: "Seguro" },
+    ],
+  },
 ];
 
 const EMOJIS_MOCK = [
-  "🏢", "🏠", "📚", "🏭", "🎰", "💵",
-  "⛽", "💻", "👥", "🎮", "📢", "🛒",
-  "🔧", "💊", "🌐", "📦", "✂️", "☕",
-  "👕", "🍔", "🍿", "🎉", "✈️", "🔥"
+  "💰", "💵", "💳", "🏦", "📊",
+  "📈", "🛒", "🛍️", "🎁", "🏠",
+  "🚗", "⛽", "🚌", "✈️", "🍔",
+  "🍕", "☕", "🍺", "🎬", "🎵",
+  "🎮", "📱", "💻", "📺", "👕",
+  "👟", "💄", "💊", "🏥", "🏋️",
+  "📚", "🎓", "👶", "🐕", "🐈",
+  "🎉", "❤️", "⭐", "🔧", "💡",
+  "💧", "🔥", "📞", "✉️", "📁",
+  "🏷️", "🎯", "🏆", "🎨", "✂️"
 ];
 
 export default function NovaCategoriaModal({
@@ -175,29 +306,42 @@ export default function NovaCategoriaModal({
 
               <div className="h-44 overflow-y-auto pr-1 customize-scrollbar">
                 {activeTab === "Ícones" && (
-                  <div className="grid grid-cols-6 sm:grid-cols-6 gap-2">
-                    {LUCIDE_ICONS_MOCK.map((iconName) => {
-                      const IconComp = icons[iconName as keyof typeof icons] as React.ElementType;
-                      const isSelected = iconType === "UI_ICON" && icon === iconName;
-                      return (
-                        <button
-                          key={iconName}
-                          type="button"
-                          onClick={() => {
-                            setIcon(iconName);
-                            setIconType("UI_ICON");
-                          }}
-                          className={[
-                            "flex aspect-square items-center justify-center rounded-xl border transition",
-                            isSelected
-                              ? "border-[#ED6936] bg-[#ED6936]/10 text-[#ED6936]"
-                              : "border-transparent text-white/60 hover:bg-white/5 hover:text-white"
-                          ].join(" ")}
-                        >
-                          {IconComp && <IconComp className="h-5 w-5" />}
-                        </button>
-                      );
-                    })}
+                  <div className="space-y-6 pb-4">
+                    {LUCIDE_ICONS_CATEGORIZED.map((group) => (
+                      <div key={group.category}>
+                        <h3 className="text-[11px] text-white/40 mb-3 px-1 font-medium">{group.category}</h3>
+                        <div className="grid grid-cols-4 sm:grid-cols-4 gap-2">
+                          {group.icons.map((iconItem) => {
+                            const IconComp = icons[iconItem.name as keyof typeof icons] as React.ElementType;
+                            const isSelected = iconType === "UI_ICON" && icon === iconItem.name;
+                            return (
+                              <button
+                                key={iconItem.name}
+                                type="button"
+                                onClick={() => {
+                                  setIcon(iconItem.name);
+                                  setIconType("UI_ICON");
+                                }}
+                                className={[
+                                  "flex flex-col aspect-square items-center justify-center rounded-xl border transition p-1",
+                                  isSelected
+                                    ? "border-[#ED6936] bg-[#ED6936]/10 text-[#ED6936]"
+                                    : "border-transparent text-white/60 hover:bg-white/5 hover:text-white"
+                                ].join(" ")}
+                              >
+                                {IconComp && <IconComp className="h-5 w-5 mb-1" />}
+                                <span className={[
+                                  "text-[10px] leading-tight text-center px-1 truncate w-full",
+                                  isSelected ? "text-[#ED6936]" : "text-white/50"
+                                ].join(" ")}>
+                                  {iconItem.label}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
