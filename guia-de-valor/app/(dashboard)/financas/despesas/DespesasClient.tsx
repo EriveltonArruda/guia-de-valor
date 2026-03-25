@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { 
-  Calendar, Plus, Search, MoreVertical, Pencil, Trash2, AlertTriangle, ArrowDownLeft,
+  Calendar, Plus, Search, MoreVertical, Pencil, Trash2, AlertTriangle, ArrowDownLeft, ChevronLeft, ChevronRight,
   CreditCard, Wallet, PiggyBank, TrendingUp, DollarSign, Banknote, Receipt, Landmark,
   ShoppingCart, ShoppingBag, Store, Gift, Tag, Shirt, Gem, Clock, Utensils, UtensilsCrossed,
   Coffee, Pizza, Beer, Car, Bus, Train, Fuel, Bike, Plane, Ship, Home, Zap, Droplet, Flame,
@@ -98,12 +98,15 @@ export default function DespesasClient({
   );
   const [endDate, setEndDate] = React.useState(new Date().toISOString().slice(0, 10));
 
+  const [filterMonth, setFilterMonth] = React.useState(new Date().getMonth());
+  const [filterYear, setFilterYear] = React.useState(new Date().getFullYear());
+
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [query, categoryFilter, memberFilter, statusFilter, tab]);
+  }, [query, categoryFilter, memberFilter, statusFilter, tab, filterMonth, filterYear]);
 
   const uniqueCategories = React.useMemo(() => {
     return Array.from(new Set(transactions.map((t) => t.categoryName).filter(Boolean))) as string[];
@@ -141,10 +144,14 @@ export default function DespesasClient({
     return result;
   }, [transactions, query, categoryFilter, memberFilter, statusFilter]);
 
-  const simpleTxs = React.useMemo(
-    () => baseFilteredTxs.filter((t) => !isRecurringTx(t)),
-    [baseFilteredTxs],
-  );
+  const simpleTxs = React.useMemo(() => {
+    return baseFilteredTxs
+      .filter((t) => {
+        if (!t.date) return false;
+        const txDate = new Date(t.date + "T12:00:00");
+        return txDate.getMonth() === filterMonth && txDate.getFullYear() === filterYear;
+      });
+  }, [baseFilteredTxs, filterMonth, filterYear]);
 
   const paginatedSimpleTxs = React.useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -153,10 +160,15 @@ export default function DespesasClient({
 
   const totalPages = Math.ceil(simpleTxs.length / itemsPerPage);
 
-  const recurringTxs = React.useMemo(
-    () => baseFilteredTxs.filter(isRecurringTx),
-    [baseFilteredTxs],
-  );
+  const recurringTxs = React.useMemo(() => {
+    return baseFilteredTxs
+      .filter(isRecurringTx)
+      .filter((t) => {
+        if (!t.date) return false;
+        const txDate = new Date(t.date + "T12:00:00");
+        return txDate.getMonth() === filterMonth && txDate.getFullYear() === filterYear;
+      });
+  }, [baseFilteredTxs, filterMonth, filterYear]);
 
   const rangeFiltered = React.useMemo(() => {
     const start = startDate ? new Date(startDate + "T12:00:00") : null;
@@ -200,6 +212,33 @@ export default function DespesasClient({
     return 0;
   }, [tab, simpleTxs, recurringTxs, advancedTotals]);
 
+  const monthNames = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+
+  const handlePrevMonth = () => {
+    let m = filterMonth - 1;
+    let y = filterYear;
+    if (m < 0) {
+      m = 11;
+      y -= 1;
+    }
+    setFilterMonth(m);
+    setFilterYear(y);
+  };
+
+  const handleNextMonth = () => {
+    let m = filterMonth + 1;
+    let y = filterYear;
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
+    setFilterMonth(m);
+    setFilterYear(y);
+  };
+
   const handleConfirmDelete = async () => {
     if (!txToDelete) return;
     setIsDeleting(true);
@@ -216,9 +255,30 @@ export default function DespesasClient({
 
   return (
     <div className="max-w-6xl mx-auto w-full px-4 space-y-5 mt-2">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Despesas</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-white">Despesas</h1>
+            {tab !== "AVANCADA" && (
+              <div className="flex items-center gap-4 bg-[#292B49]/40 rounded-xl p-1.5 border border-white/10 w-fit backdrop-blur-sm">
+                <button 
+                  onClick={handlePrevMonth} 
+                  className="p-1.5 text-white/60 hover:text-white transition rounded-lg hover:bg-white/5"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <div className="text-sm font-bold text-white min-w-[120px] text-center uppercase tracking-wide">
+                  {monthNames[filterMonth]} {filterYear}
+                </div>
+                <button 
+                  onClick={handleNextMonth} 
+                  className="p-1.5 text-white/60 hover:text-white transition rounded-lg hover:bg-white/5"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            )}
+          </div>
           <p className="text-white/70 mt-1 text-sm">
             Total: {formatBRL(currentTotal)}
           </p>
