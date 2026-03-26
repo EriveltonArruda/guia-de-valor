@@ -33,7 +33,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  List
 } from "lucide-react";
 
 // Mapeamento 100% fiel ao modelo GestorMoney
@@ -53,8 +54,8 @@ const menuItems = [
       { name: 'Patrimônio "Conta"', href: "/financas/patrimonio", icon: Wallet },
       { name: "Receitas", href: "/financas/receitas", icon: TrendingUp },
       { name: "Despesas", href: "/financas/despesas", icon: TrendingDown },
+      { name: "Transações", href: "/financas/transacoes", icon: List },
       /*
-      { name: "Transações", href: "/financas/transacoes", icon: ArrowRightLeft },
       { name: "Cartões de Crédito", href: "/financas/cartoes", icon: CreditCard },
       */
     ]

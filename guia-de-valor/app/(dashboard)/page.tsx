@@ -3,7 +3,7 @@ import { ArrowDownCircle, ArrowUpCircle, Wallet, ArrowUpRight, ArrowDownLeft } f
 import { TransactionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
-import { MonthSelector } from "@/components/dashboard/MonthSelector";
+import { MonthYearPicker } from "@/components/dashboard/MonthYearPicker";
 import { CashFlowChart } from "@/components/dashboard/CashFlowChart";
 
 export const dynamic = "force-dynamic";
@@ -155,7 +155,7 @@ export default async function DashboardPage(props: {
           <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard Central</h1>
           <p className="text-white/60 text-sm mt-1">Sua visão geral financeira avançada</p>
         </div>
-        <MonthSelector currentMonth={currentMonth} currentYear={currentYear} />
+        <MonthYearPicker currentMonth={currentMonth} currentYear={currentYear} updateUrl={true} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

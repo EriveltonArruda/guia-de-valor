@@ -12,6 +12,7 @@ import {
   Bell, Mail, Phone, Shield
 } from "lucide-react";
 import NovaReceitaModal from "./NovaReceitaModal";
+import { MonthYearPicker } from "@/components/dashboard/MonthYearPicker";
 import type { CreateReceitaState } from "./actions";
 
 const IconMap: Record<string, React.ElementType> = {
@@ -213,33 +214,6 @@ export default function ReceitasClient({
     return 0;
   }, [tab, simpleTxs, recurringTxs, advancedTotals]);
 
-  const monthNames = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-  ];
-
-  const handlePrevMonth = () => {
-    let m = filterMonth - 1;
-    let y = filterYear;
-    if (m < 0) {
-      m = 11;
-      y -= 1;
-    }
-    setFilterMonth(m);
-    setFilterYear(y);
-  };
-
-  const handleNextMonth = () => {
-    let m = filterMonth + 1;
-    let y = filterYear;
-    if (m > 11) {
-      m = 0;
-      y += 1;
-    }
-    setFilterMonth(m);
-    setFilterYear(y);
-  };
-
   const handleConfirmDelete = async () => {
     if (!txToDelete) return;
     setIsDeleting(true);
@@ -261,23 +235,14 @@ export default function ReceitasClient({
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-white">Receitas</h1>
             {tab !== "AVANCADA" && (
-              <div className="flex items-center gap-4 bg-[#292B49]/40 rounded-xl p-1.5 border border-white/10 w-fit backdrop-blur-sm">
-                <button 
-                  onClick={handlePrevMonth} 
-                  className="p-1.5 text-white/60 hover:text-white transition rounded-lg hover:bg-white/5"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <div className="text-sm font-bold text-white min-w-[120px] text-center uppercase tracking-wide">
-                  {monthNames[filterMonth]} {filterYear}
-                </div>
-                <button 
-                  onClick={handleNextMonth} 
-                  className="p-1.5 text-white/60 hover:text-white transition rounded-lg hover:bg-white/5"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
+              <MonthYearPicker 
+                currentMonth={filterMonth} 
+                currentYear={filterYear} 
+                onChange={(m, y) => {
+                  setFilterMonth(m);
+                  setFilterYear(y);
+                }} 
+              />
             )}
           </div>
           <p className="text-white/70 mt-1 text-sm">

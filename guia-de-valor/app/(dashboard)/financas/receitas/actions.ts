@@ -16,6 +16,16 @@ function parseBRCurrency(input: string) {
   return value;
 }
 
+function addMonthsSafe(date: Date, months: number): Date {
+  const d = new Date(date.getTime());
+  const expectedMonth = (d.getMonth() + months) % 12;
+  d.setMonth(d.getMonth() + months);
+  if (d.getMonth() !== expectedMonth) {
+    d.setDate(0);
+  }
+  return d;
+}
+
 export type CreateReceitaState = {
   ok: boolean;
   error?: string;
@@ -45,7 +55,8 @@ export async function createReceitaAction(
     return { ok: false, error: "Valor inválido." };
   }
 
-  const date = new Date(dataRaw);
+  const baseDateString = dataRaw.split('T')[0];
+  const date = new Date(`${baseDateString}T12:00:00`);
   if (Number.isNaN(date.getTime())) {
     return { ok: false, error: "Data inválida." };
   }
@@ -107,21 +118,41 @@ export async function createReceitaAction(
       });
     } else {
       // SE NÃO TEM ID, CRIA
-      await prisma.transaction.create({
-        data: {
-          workspaceId: workspace.id,
-          userId: user.id,
-          categoryId,
-          accountId: account.id,
-          type: TransactionType.INCOME,
-          status: TransactionStatus.PAID,
-          amount,
-          description: finalDescription,
-          date,
-          paidAt: date,
-          needsReview: false,
-        },
-      });
+      if (recorrente) {
+        const payload = Array.from({ length: 12 }).map((_, i) => {
+          const txDate = addMonthsSafe(date, i);
+          return {
+            workspaceId: workspace.id,
+            userId: user.id,
+            categoryId,
+            accountId: account.id,
+            type: TransactionType.INCOME,
+            status: TransactionStatus.PAID,
+            amount,
+            description: finalDescription,
+            date: txDate,
+            paidAt: txDate,
+            needsReview: false,
+          };
+        });
+        await prisma.transaction.createMany({ data: payload });
+      } else {
+        await prisma.transaction.create({
+          data: {
+            workspaceId: workspace.id,
+            userId: user.id,
+            categoryId,
+            accountId: account.id,
+            type: TransactionType.INCOME,
+            status: TransactionStatus.PAID,
+            amount,
+            description: finalDescription,
+            date,
+            paidAt: date,
+            needsReview: false,
+          },
+        });
+      }
     }
   } catch (error) {
     console.error("Erro ao salvar receita:", error);
