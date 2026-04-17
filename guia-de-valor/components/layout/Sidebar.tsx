@@ -40,13 +40,7 @@ import {
 // Mapeamento 100% fiel ao modelo GestorMoney
 const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/" },
-  /*
-  {
-    name: "Utilidades",
-    icon: Sparkles,
-    subItems: []
-  },
-  */
+
   {
     name: "Finanças",
     icon: ArrowRightLeft,
@@ -55,12 +49,9 @@ const menuItems = [
       { name: "Receitas", href: "/financas/receitas", icon: TrendingUp },
       { name: "Despesas", href: "/financas/despesas", icon: TrendingDown },
       { name: "Transações", href: "/financas/transacoes", icon: List },
-      /*
       { name: "Cartões de Crédito", href: "/financas/cartoes", icon: CreditCard },
-      */
     ]
   },
-  /*
   {
     name: "Contas",
     icon: CalendarDays,
@@ -83,37 +74,23 @@ const menuItems = [
       { name: "Veículos", href: "/planejar/veiculos", icon: Car },
     ]
   },
-  */
   {
     name: "Gestão",
     icon: FileText,
     subItems: [
       { name: "Categorias", href: "/gestao/categorias", icon: Tags },
-      /*
       { name: "Relatórios", href: "/gestao/relatorios", icon: FileText },
       { name: "Exportar Dados", href: "/gestao/exportar", icon: Download },
       { name: "Perfis Financeiros", href: "/gestao/perfis", icon: Users },
-      */
     ]
   },
-  /*
-  {
-    name: "Mais",
-    icon: MoreHorizontal,
-    subItems: [
-      { name: "Indique e Ganhe", href: "/mais/indique", icon: Gift },
-      { name: "Tutorial", href: "/mais/tutorial", icon: BookOpen },
-      { name: "Contato e Sugestões", href: "/mais/contato", icon: MessageSquare },
-      { name: "Configurações", href: "/mais/configuracoes", icon: Settings },
-    ]
-  },
-  */
+  { name: "Configurações", icon: Settings, href: "/configuracoes" }
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>("Finanças");
 
   useEffect(() => {
     const activeParentMenu = menuItems.find(item =>
