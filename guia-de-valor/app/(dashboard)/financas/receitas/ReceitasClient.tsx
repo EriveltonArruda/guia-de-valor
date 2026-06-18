@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { 
+import {
   Calendar, Plus, Search, MoreVertical, Pencil, Trash2, AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight,
   CreditCard, Wallet, PiggyBank, TrendingUp, DollarSign, Banknote, Receipt, Landmark,
   ShoppingCart, ShoppingBag, Store, Gift, Tag, Shirt, Gem, Clock, Utensils, UtensilsCrossed,
@@ -235,13 +235,13 @@ export default function ReceitasClient({
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-white">Receitas</h1>
             {tab !== "AVANCADA" && (
-              <MonthYearPicker 
-                currentMonth={filterMonth} 
-                currentYear={filterYear} 
+              <MonthYearPicker
+                currentMonth={filterMonth}
+                currentYear={filterYear}
                 onChange={(m, y) => {
                   setFilterMonth(m);
                   setFilterYear(y);
-                }} 
+                }}
               />
             )}
           </div>
@@ -381,13 +381,13 @@ export default function ReceitasClient({
                     ].join(" ")}
                   >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
                         {t.categoryIconType === "EMOJI" && t.categoryIcon ? (
                           <span className="text-xl">{t.categoryIcon}</span>
                         ) : t.categoryIconType === "UI_ICON" && t.categoryIcon && IconMap[t.categoryIcon] ? (
-                          React.createElement(IconMap[t.categoryIcon], { className: "h-5 w-5 text-emerald-500" })
+                          React.createElement(IconMap[t.categoryIcon], { className: "h-5 w-5 text-orange-500" })
                         ) : (
-                          <ArrowUpRight className="h-5 w-5 text-emerald-500" />
+                          <ArrowUpRight className="h-5 w-5 text-orange-500" />
                         )}
                       </div>
                       <div className="min-w-0">
@@ -401,7 +401,7 @@ export default function ReceitasClient({
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <div className="text-emerald-500 font-bold whitespace-nowrap">
+                      <div className="text-orange-500 font-bold whitespace-nowrap">
                         {formatBRL(t.amount)}
                       </div>
                       <div className="relative">
@@ -503,7 +503,7 @@ export default function ReceitasClient({
             </div>
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
               <div className="text-xs text-white/60">Total estimado</div>
-              <div className="text-emerald-500 font-bold mt-1">
+              <div className="text-orange-500 font-bold mt-1">
                 {formatBRL(recurringTxs.reduce((acc, t) => acc + t.amount, 0))}
               </div>
             </div>
@@ -530,13 +530,13 @@ export default function ReceitasClient({
                     ].join(" ")}
                   >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
                         {t.categoryIconType === "EMOJI" && t.categoryIcon ? (
                           <span className="text-xl">{t.categoryIcon}</span>
                         ) : t.categoryIconType === "UI_ICON" && t.categoryIcon && IconMap[t.categoryIcon] ? (
-                          React.createElement(IconMap[t.categoryIcon], { className: "h-5 w-5 text-emerald-500" })
+                          React.createElement(IconMap[t.categoryIcon], { className: "h-5 w-5 text-orange-500" })
                         ) : (
-                          <ArrowUpRight className="h-5 w-5 text-emerald-500" />
+                          <ArrowUpRight className="h-5 w-5 text-orange-500" />
                         )}
                       </div>
                       <div className="min-w-0">
@@ -550,7 +550,7 @@ export default function ReceitasClient({
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <div className="text-emerald-500 font-bold whitespace-nowrap">
+                      <div className="text-orange-500 font-bold whitespace-nowrap">
                         {formatBRL(t.amount)}
                       </div>
                       <div className="relative">
@@ -648,21 +648,21 @@ export default function ReceitasClient({
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
               <div className="text-xs text-white/60">Total de receitas</div>
-              <div className="text-emerald-500 font-bold mt-2">
+              <div className="text-orange-500 font-bold mt-2">
                 {formatBRL(advancedTotals.total)}
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
               <div className="text-xs text-white/60">Média mensal</div>
-              <div className="text-emerald-500 font-bold mt-2">
+              <div className="text-orange-500 font-bold mt-2">
                 {formatBRL(advancedTotals.avgMonthly)}
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-[#292B49]/20 p-5">
               <div className="text-xs text-white/60">Maior receita</div>
-              <div className="text-emerald-500 font-bold mt-2">
+              <div className="text-orange-500 font-bold mt-2">
                 {formatBRL(advancedTotals.highest)}
               </div>
             </div>
@@ -687,7 +687,7 @@ export default function ReceitasClient({
                       <div className="text-xs text-white/80 truncate">
                         {c.name}
                       </div>
-                      <div className="text-xs font-bold text-emerald-500">
+                      <div className="text-xs font-bold text-orange-500">
                         {formatBRL(c.amount)}
                       </div>
                     </div>
@@ -714,7 +714,7 @@ export default function ReceitasClient({
                       <div className="text-xs text-white/80 truncate">
                         {t.description}
                       </div>
-                      <div className="text-xs font-bold text-emerald-500">
+                      <div className="text-xs font-bold text-orange-500">
                         {formatBRL(t.amount)}
                       </div>
                     </div>

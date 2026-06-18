@@ -6,6 +6,8 @@ import { CreditCardModal } from "./CreditCardModal";
 import { CreditCardTransactionModal } from "./CreditCardTransactionModal";
 import { deleteCreditCardAction } from "./actions";
 import { useToast } from "@/hooks/use-toast";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +39,8 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
   const [selectedCardId, setSelectedCardId] = useState<string>("");
   const [invoiceDate, setInvoiceDate] = useState<Date>(new Date());
 
+  const [categoryPeriod, setCategoryPeriod] = useState("6m");
+
   const { toast } = useToast();
 
   async function handleDelete(id: string) {
@@ -67,6 +71,10 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
+  // Processamento de dados e identificação de compras recorrentes
+  const allRecurringTransactions: any[] = [];
+  const allTransactions: any[] = [];
+
   const processedCards = cartoes.map(card => {
     const transactions = card.transactions || [];
 
@@ -75,19 +83,33 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
       .reduce((acc: number, t: any) => acc + t.amount, 0);
 
     const closingDay = card.closingDay || 1;
-    // Data de início: fechamento+1 do mês anterior 
     const startPeriod = new Date(currentYear, currentMonth - 1, closingDay + 1);
-    // Data fim: fechamento do mês atual, no final do dia
     const endPeriod = new Date(currentYear, currentMonth, closingDay, 23, 59, 59, 999);
 
     const faturaMes = transactions
       .filter((t: any) => {
         if (t.status !== "PENDING" || t.type !== "EXPENSE") return false;
-        
         const d = new Date(t.date);
         return d >= startPeriod && d <= endPeriod;
       })
       .reduce((acc: number, t: any) => acc + t.amount, 0);
+
+    // Coleta as compras para processamento
+    transactions.forEach((t: any) => {
+      allTransactions.push(t);
+      if (t.description.includes("[Recorrente]")) {
+        const baseDesc = t.description.replace("\n[Recorrente]", "").trim();
+        if (!allRecurringTransactions.some(rt => rt.description === baseDesc && rt.cardId === card.id)) {
+          allRecurringTransactions.push({
+            ...t,
+            description: baseDesc,
+            cardName: card.name,
+            cardId: card.id,
+            cardColor: card.color
+          });
+        }
+      }
+    });
 
     limiteTotalGeral += card.limit;
     utilizadoTotalGeral += utilizado;
@@ -100,11 +122,46 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
 
   const disponivelTotalGeral = Math.max(limiteTotalGeral - utilizadoTotalGeral, 0);
 
+  // 🚀 LÓGICA DO GRÁFICO MENSAL (Últimos 6 meses)
+  const last6Months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    return { month: d.getMonth(), year: d.getFullYear(), label: d.toLocaleString('pt-BR', { month: 'short' }).toUpperCase() };
+  }).reverse();
+
+  const monthlyChartData = last6Months.map(m => {
+    const total = allTransactions.reduce((acc, t) => {
+      const d = new Date(t.date);
+      if (d.getMonth() === m.month && d.getFullYear() === m.year && t.type === 'EXPENSE') {
+        return acc + t.amount;
+      }
+      return acc;
+    }, 0);
+    return { name: m.label, total };
+  });
+
+  // 🚀 LÓGICA DO GRÁFICO DE CATEGORIAS
+  const cutoffDate = new Date();
+  cutoffDate.setMonth(cutoffDate.getMonth() - parseInt(categoryPeriod.replace('m', '')));
+
+  const categoryDataMap = new Map();
+  allTransactions.forEach(t => {
+    const d = new Date(t.date);
+    if (d >= cutoffDate && t.type === 'EXPENSE') {
+      const catName = t.category?.name || "Outros";
+      categoryDataMap.set(catName, (categoryDataMap.get(catName) || 0) + t.amount);
+    }
+  });
+
+  const categoryChartData = Array.from(categoryDataMap.entries())
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+
   function renderFaturasTab() {
     const invoiceMonth = invoiceDate.getMonth();
     const invoiceYear = invoiceDate.getFullYear();
     const selectedCard = processedCards.find(c => c.id === selectedCardId) || processedCards[0];
-    
+
     if (!selectedCard) {
       return (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -113,48 +170,45 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
         </div>
       );
     }
-  
+
     const closingDay = selectedCard.closingDay || 1;
     const dueDay = selectedCard.dueDay || 1;
-  
+
     const startPeriod = new Date(invoiceYear, invoiceMonth - 1, closingDay + 1);
     const endPeriod = new Date(invoiceYear, invoiceMonth, closingDay, 23, 59, 59, 999);
-    
+
     const dueDate = new Date(invoiceYear, invoiceMonth, dueDay);
     if (dueDay < closingDay) {
       dueDate.setMonth(dueDate.getMonth() + 1);
     }
-  
+
     const cardTransactions = selectedCard.transactions || [];
     const invoiceTransactions = cardTransactions.filter((t: any) => {
       if (t.type !== "EXPENSE") return false;
       const d = new Date(t.date);
       return d >= startPeriod && d <= endPeriod;
     }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  
+
     const totalInvoice = invoiceTransactions.reduce((acc: number, t: any) => acc + t.amount, 0);
-    const totalPaid = invoiceTransactions.filter((t:any) => t.status === "PAID").reduce((acc: number, t: any) => acc + t.amount, 0);
-  
+    const totalPaid = invoiceTransactions.filter((t: any) => t.status === "PAID").reduce((acc: number, t: any) => acc + t.amount, 0);
+
     const monthName = invoiceDate.toLocaleString('pt-BR', { month: 'long' });
     const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
     const cardColor = selectedCard.color || "#8B5CF6";
-  
+
     const today = new Date();
     const todayMonth = today.getMonth();
     const todayYear = today.getFullYear();
-    
+
     let isFechada = false;
     if (invoiceYear < todayYear || (invoiceYear === todayYear && invoiceMonth < todayMonth)) {
-      // Fatura anterior ao mês/ano atual
       isFechada = true;
     } else if (invoiceYear === todayYear && invoiceMonth === todayMonth) {
-      // Regra 2: Fatura do mês/ano atual. Fechada se dia de hoje >= dia de fechamento
       isFechada = today.getDate() >= closingDay;
     } else {
-      // Fatura de um mês/ano futuro
       isFechada = false;
     }
-  
+
     return (
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2 max-w-sm">
@@ -172,10 +226,10 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
             </SelectContent>
           </Select>
         </div>
-  
+
         <div className="flex flex-col items-center justify-center py-4">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setInvoiceDate(new Date(invoiceDate.setMonth(invoiceDate.getMonth() - 1)))}
               className="p-2 bg-[#1C1C21] hover:bg-[#25252B] rounded-full transition-colors border border-border"
             >
@@ -184,7 +238,7 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
             <div className="text-center w-48">
               <h3 className="text-lg font-bold text-foreground">Fatura {capitalizedMonth} {invoiceYear}</h3>
             </div>
-            <button 
+            <button
               onClick={() => setInvoiceDate(new Date(invoiceDate.setMonth(invoiceDate.getMonth() + 1)))}
               className="p-2 bg-[#1C1C21] hover:bg-[#25252B] rounded-full transition-colors border border-border"
             >
@@ -195,7 +249,7 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
             Vence dia {dueDate.toLocaleDateString('pt-BR')}
           </div>
         </div>
-  
+
         <div className="bg-[#1C1C21] rounded-2xl border border-border overflow-hidden shadow-lg relative">
           <div className="h-2 w-full absolute top-0 left-0" style={{ backgroundColor: cardColor }}></div>
           <div className="p-6 md:p-8">
@@ -222,12 +276,12 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
                 </div>
               </div>
               <div>
-                <Badge variant={isFechada ? "destructive" : "default"} className={`pointer-events-none ${!isFechada ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" : ""}`}>
+                <Badge variant={isFechada ? "destructive" : "default"} className={`pointer-events-none ${!isFechada ? "bg-orange-500/10 text-orange-500 hover:bg-orange-500/20" : ""}`}>
                   {isFechada ? "Fechada" : "Aberta"}
                 </Badge>
               </div>
             </div>
-  
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-background rounded-xl p-4 border border-border/50">
                 <span className="text-sm font-medium text-muted-foreground block mb-1">Total da Fatura</span>
@@ -235,7 +289,7 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
               </div>
               <div className="bg-background rounded-xl p-4 border border-border/50">
                 <span className="text-sm font-medium text-muted-foreground block mb-1">Já Pago</span>
-                <span className="text-2xl font-bold text-emerald-500">{formatBRL(totalPaid)}</span>
+                <span className="text-2xl font-bold text-orange-500">{formatBRL(totalPaid)}</span>
               </div>
               <div className="bg-background rounded-xl p-4 border border-border/50">
                 <span className="text-sm font-medium text-muted-foreground block mb-1">Limite Disponível</span>
@@ -248,7 +302,7 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
             </div>
           </div>
         </div>
-  
+
         <div>
           <h3 className="text-lg font-semibold text-foreground mb-4">Compras desta fatura ({invoiceTransactions.length})</h3>
           {invoiceTransactions.length === 0 ? (
@@ -260,22 +314,30 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
             </div>
           ) : (
             <div className="bg-[#1C1C21] rounded-xl border border-border overflow-hidden">
-              {invoiceTransactions.map((tx: any, index: number) => (
-                <div key={tx.id} className={`flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors ${index !== invoiceTransactions.length - 1 ? 'border-b border-border/50' : ''}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-border">
-                       <ShoppingCart className="w-4 h-4 text-muted-foreground" />
+              {invoiceTransactions.map((tx: any, index: number) => {
+                const cleanDesc = tx.description.replace("\n[Recorrente]", "").trim();
+                return (
+                  <div key={tx.id} className={`flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors ${index !== invoiceTransactions.length - 1 ? 'border-b border-border/50' : ''}`}>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-border">
+                        <ShoppingCart className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-foreground flex items-center gap-2">
+                          {cleanDesc}
+                          {tx.description.includes("[Recorrente]") && (
+                            <Badge variant="outline" className="text-[10px] py-0 h-4 border-purple-500/30 text-purple-400">Recorrente</Badge>
+                          )}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{new Date(tx.date).toLocaleDateString('pt-BR')} {tx.totalInstallments > 1 ? `• ${tx.installmentIndex} de ${tx.totalInstallments}` : ''}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-foreground">{tx.description}</span>
-                      <span className="text-xs text-muted-foreground">{new Date(tx.date).toLocaleDateString('pt-BR')} • {index + 1} de {tx.totalInstallments || 1}</span>
+                    <div className="flex flex-col items-end">
+                      <span className="font-bold text-foreground">-{formatBRL(tx.amount)}</span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="font-bold text-foreground">-{formatBRL(tx.amount)}</span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -298,7 +360,7 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
             setCardToEdit(null);
             setIsModalOpen(true);
           }}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm shadow-emerald-500/20 whitespace-nowrap"
+          className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm shadow-orange-500/20 whitespace-nowrap"
         >
           <Plus className="w-5 h-5" />
           Novo Cartão
@@ -309,8 +371,8 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-[#1C1C21] border border-border rounded-xl p-5 flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-emerald-500" />
+            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-orange-500" />
             </div>
             <span className="text-sm font-medium text-muted-foreground">Limite Total</span>
           </div>
@@ -329,21 +391,32 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
 
         <div className="bg-[#1C1C21] border border-border rounded-xl p-5 flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-emerald-500" />
+            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-orange-500" />
             </div>
             <span className="text-sm font-medium text-muted-foreground">Disponível Total</span>
           </div>
-          <span className="text-2xl font-bold text-emerald-500">{formatBRL(disponivelTotalGeral)}</span>
+          <span className="text-2xl font-bold text-orange-500">{formatBRL(disponivelTotalGeral)}</span>
         </div>
       </div>
 
-      {/* Gráfico de Gastos Placeholder */}
+      {/* 🚀 Gráfico de Gastos Mensais */}
       <div className="mb-8 bg-[#1C1C21] border border-border rounded-xl p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">Gastos Mensais com Cartão</h2>
-        <div className="flex items-center justify-center h-48 border border-border border-dashed rounded-lg bg-black/20">
-          <span className="text-muted-foreground text-sm">Nenhum gasto registrado ainda</span>
-        </div>
+        {monthlyChartData.every(d => d.total === 0) ? (
+          <div className="flex items-center justify-center h-48 border border-border border-dashed rounded-lg bg-black/20">
+            <span className="text-muted-foreground text-sm">Nenhum gasto registrado ainda</span>
+          </div>
+        ) : (
+          <ChartContainer config={{ total: { label: "Gastos", color: "#8b5cf6" } }} className="h-56 w-full">
+            <BarChart data={monthlyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#333" />
+              <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} fontSize={12} stroke="#888" />
+              <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatBRL(value as number)} />} />
+              <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
+        )}
       </div>
 
       {/* Navegação de Tabs */}
@@ -352,12 +425,12 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-4 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === tab ? "text-emerald-500" : "text-muted-foreground hover:text-foreground"
+            className={`pb-4 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === tab ? "text-orange-500" : "text-muted-foreground hover:text-foreground"
               }`}
           >
             {tab}
             {activeTab === tab && (
-              <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-emerald-500 rounded-t-full" />
+              <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-orange-500 rounded-t-full" />
             )}
           </button>
         ))}
@@ -380,7 +453,7 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
                   setCardToEdit(null);
                   setIsModalOpen(true);
                 }}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm shadow-emerald-500/20"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm shadow-orange-500/20"
               >
                 <Plus className="w-5 h-5" />
                 Cadastrar Cartão
@@ -421,7 +494,7 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
                         <span className="text-foreground font-medium">{card.percentUsed.toFixed(0)}%</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2 mb-4 overflow-hidden shadow-inner">
-                        <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${card.percentUsed}%` }}></div>
+                        <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${card.percentUsed}%` }}></div>
                       </div>
 
                       <div className="grid grid-cols-3 gap-2 text-center text-xs">
@@ -435,14 +508,14 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
                         </div>
                         <div className="bg-background border border-border rounded p-2">
                           <span className="block text-muted-foreground mb-1">Disponível</span>
-                          <span className="font-semibold text-emerald-500 truncate block" title={formatBRL(card.disponivel)}>{formatBRL(card.disponivel)}</span>
+                          <span className="font-semibold text-orange-500 truncate block" title={formatBRL(card.disponivel)}>{formatBRL(card.disponivel)}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Ações (Rodapé do Card) */}
+                    {/* Ações */}
                     <div className="flex items-center justify-between gap-2">
-                      <button 
+                      <button
                         onClick={() => {
                           setSelectedCardId(card.id);
                           setInvoiceDate(new Date());
@@ -504,29 +577,66 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
       )}
 
       {activeTab === "Recorrentes" && (
-        <div className="flex flex-col items-center justify-center py-16 bg-[#1C1C21] border border-border border-dashed rounded-xl px-4 animate-in fade-in duration-300">
-          <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-6 shadow-inner">
-            <RefreshCw className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-xl font-bold text-foreground mb-2 text-center">Nenhuma compra recorrente</h3>
-          <p className="text-muted-foreground text-center max-w-xl mb-6">
-            Compras recorrentes são lançadas automaticamente todo mês na fatura do cartão. Ao criar uma compra, marque como 'Recorrente' para ela aparecer aqui.
-          </p>
+        <div className="animate-in fade-in duration-300">
+          {allRecurringTransactions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 bg-[#1C1C21] border border-border border-dashed rounded-xl px-4">
+              <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                <RefreshCw className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2 text-center">Nenhuma compra recorrente</h3>
+              <p className="text-muted-foreground text-center max-w-xl mb-6">
+                Compras recorrentes são lançadas automaticamente todo mês na fatura do cartão. Ao criar uma compra, marque como 'Recorrente' para ela aparecer aqui.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              <div>
+                <h2 className="text-xl font-bold text-foreground mb-1">Suas Assinaturas</h2>
+                <p className="text-sm text-muted-foreground">Gerencie os gastos que se repetem todos os meses no seu cartão de crédito.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {allRecurringTransactions.map((tx, idx) => (
+                  <div key={idx} className="bg-[#1C1C21] border border-border rounded-xl p-5 flex flex-col gap-4 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: tx.cardColor }}></div>
+                    <div className="flex justify-between items-start pl-2">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-background rounded-lg border border-border">
+                          <RefreshCw className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-foreground">{tx.description}</span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <CreditCard className="w-3 h-3" /> {tx.cardName}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-end justify-between mt-2 pl-2">
+                      <span className="text-sm text-muted-foreground">Valor mensal</span>
+                      <span className="text-xl font-bold text-foreground">{formatBRL(tx.amount)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
+      {/* 🚀 Aba Gastos/Categorias com Gráfico Dinâmico */}
       {activeTab === "Gastos/Categorias" && (
         <div className="bg-[#1C1C21] rounded-2xl border border-border overflow-hidden shadow-lg animate-in fade-in duration-300">
           <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-border/50">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-6 h-6 text-emerald-500" />
+                <BarChart3 className="w-6 h-6 text-orange-500" />
                 <h3 className="text-xl font-bold text-foreground">Gastos por Categoria</h3>
               </div>
-              <p className="text-sm text-muted-foreground">Distribuição de gastos por categoria de todos os cartões</p>
+              <p className="text-sm text-muted-foreground">Distribuição de gastos de todos os cartões</p>
             </div>
             <div className="w-full md:w-48">
-              <Select defaultValue="6m">
+              <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
                 <SelectTrigger className="w-full bg-background border-border text-foreground">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
@@ -539,8 +649,23 @@ export default function CartoesClient({ cartoes, categories }: { cartoes: any[],
               </Select>
             </div>
           </div>
-          <div className="p-6 min-h-[300px] flex items-center justify-center">
-            <p className="text-muted-foreground font-medium">Nenhum gasto categorizado encontrado</p>
+
+          <div className="p-6">
+            {categoryChartData.length === 0 ? (
+              <div className="min-h-[300px] flex items-center justify-center">
+                <p className="text-muted-foreground font-medium">Nenhum gasto categorizado encontrado no período.</p>
+              </div>
+            ) : (
+              <ChartContainer config={{ value: { label: "Total", color: "#10b981" } }} className="h-80 w-full">
+                <BarChart data={categoryChartData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#333" />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={120} stroke="#888" />
+                  <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatBRL(value as number)} />} />
+                  <Bar dataKey="value" fill="var(--color-value)" radius={[0, 4, 4, 0]} barSize={24} />
+                </BarChart>
+              </ChartContainer>
+            )}
           </div>
         </div>
       )}

@@ -145,7 +145,7 @@ export default function GerenciarPatrimonioInicial({
             className={[
               "inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition",
               isAdd
-                ? "bg-emerald-500 hover:bg-emerald-500/90 text-black"
+                ? "bg-orange-500 hover:bg-orange-500/90 text-black"
                 : "bg-red-500 hover:bg-red-500/90 text-black",
               isSubmitting || !value.trim()
                 ? "opacity-50 cursor-not-allowed"

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { 
+import {
   Plus, Search, MoreVertical, AlertTriangle, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight,
   CreditCard, Wallet, PiggyBank, TrendingUp, DollarSign, Banknote, Receipt, Landmark,
   ShoppingCart, ShoppingBag, Store, Gift, Tag, Shirt, Gem, Clock, Utensils, UtensilsCrossed,
@@ -66,7 +66,7 @@ export default function TransacoesClient({
 
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
-  
+
   const [openMenuId, setOpenMenuId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -112,7 +112,7 @@ export default function TransacoesClient({
     if (periodoFilter !== "Todos os períodos") {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       result = result.filter((t) => {
         const txDate = new Date(t.date + "T00:00:00");
         txDate.setHours(0, 0, 0, 0);
@@ -246,90 +246,91 @@ export default function TransacoesClient({
             <div className="space-y-3">
               {paginatedTxs.map((t) => {
                 const isIncome = t.type === "INCOME";
-                
+
                 return (
-                <div
-                  key={t.id}
-                  className={[
-                    "flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#0b1220] p-4 relative",
-                    openMenuId === t.id ? "z-50 shadow-xl" : "z-10 hover:border-white/20 transition-colors"
-                  ].join(" ")}
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${isIncome ? 'bg-emerald-500/15' : 'bg-red-500/15'}`}>
-                       {isIncome ? <ArrowUpRight className="h-5 w-5 text-emerald-500" /> : <ArrowDownRight className="h-5 w-5 text-red-500" />}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-white font-semibold truncate text-[15px]">
-                        {t.description}
+                  <div
+                    key={t.id}
+                    className={[
+                      "flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#0b1220] p-4 relative",
+                      openMenuId === t.id ? "z-50 shadow-xl" : "z-10 hover:border-white/20 transition-colors"
+                    ].join(" ")}
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${isIncome ? 'bg-orange-500/15' : 'bg-red-500/15'}`}>
+                        {isIncome ? <ArrowUpRight className="h-5 w-5 text-orange-500" /> : <ArrowDownRight className="h-5 w-5 text-red-500" />}
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <div className="flex items-center gap-1.5 bg-white/5 px-2 py-0.5 rounded-md text-xs text-white/70">
-                           {t.categoryIconType === "EMOJI" && t.categoryIcon ? (
+                      <div className="min-w-0">
+                        <div className="text-white font-semibold truncate text-[15px]">
+                          {t.description}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1.5 bg-white/5 px-2 py-0.5 rounded-md text-xs text-white/70">
+                            {t.categoryIconType === "EMOJI" && t.categoryIcon ? (
                               <span>{t.categoryIcon}</span>
                             ) : t.categoryIconType === "UI_ICON" && t.categoryIcon && IconMap[t.categoryIcon] ? (
                               React.createElement(IconMap[t.categoryIcon], { className: "h-3 w-3" })
                             ) : null}
-                           <span className="truncate max-w-[120px]">{t.categoryName ?? "Sem categoria"}</span>
-                        </div>
-                        <span className="text-white/30 text-xs">•</span>
-                        <span className="text-xs text-white/60">{formatDateBR(t.date)}</span>
-                        <span className="text-white/30 text-xs">•</span>
-                        <div className="flex items-center gap-1">
-                          <span className="h-5 w-5 rounded-full bg-[#292B49] border border-white/10 flex items-center justify-center text-[10px] text-white/80 font-medium shadow-sm">
-                            {t.userName.charAt(0).toUpperCase()}
-                          </span>
+                            <span className="truncate max-w-[120px]">{t.categoryName ?? "Sem categoria"}</span>
+                          </div>
+                          <span className="text-white/30 text-xs">•</span>
+                          <span className="text-xs text-white/60">{formatDateBR(t.date)}</span>
+                          <span className="text-white/30 text-xs">•</span>
+                          <div className="flex items-center gap-1">
+                            <span className="h-5 w-5 rounded-full bg-[#292B49] border border-white/10 flex items-center justify-center text-[10px] text-white/80 font-medium shadow-sm">
+                              {t.userName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className={`font-bold whitespace-nowrap text-right ${isIncome ? 'text-emerald-500' : 'text-red-500'}`}>
-                      {isIncome ? "+" : "-"} {formatBRL(t.amount)}
-                    </div>
-                    <div className="relative">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setOpenMenuId(openMenuId === t.id ? null : t.id);
-                        }}
-                        className="p-1.5 text-white/50 hover:text-white transition rounded-md hover:bg-white/10 relative z-10"
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </button>
+                    <div className="flex items-center gap-3">
+                      <div className={`font-bold whitespace-nowrap text-right ${isIncome ? 'text-orange-500' : 'text-red-500'}`}>
+                        {isIncome ? "+" : "-"} {formatBRL(t.amount)}
+                      </div>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === t.id ? null : t.id);
+                          }}
+                          className="p-1.5 text-white/50 hover:text-white transition rounded-md hover:bg-white/10 relative z-10"
+                        >
+                          <MoreVertical className="h-5 w-5" />
+                        </button>
 
-                      {openMenuId === t.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(null);
-                            }}
-                          />
-                          <div
-                            className="absolute right-0 top-full mt-1 w-32 rounded-lg border border-white/10 bg-[#292B49] p-1 shadow-2xl z-50 animate-in fade-in zoom-in duration-100"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
+                        {openMenuId === t.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setOpenMenuId(null);
-                                alert("Funcionalidade em desenvolvimento");
                               }}
-                              className="w-full text-left rounded-md px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition"
+                            />
+                            <div
+                              className="absolute right-0 top-full mt-1 w-32 rounded-lg border border-white/10 bg-[#292B49] p-1 shadow-2xl z-50 animate-in fade-in zoom-in duration-100"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              Detalhes
-                            </button>
-                          </div>
-                        </>
-                      )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuId(null);
+                                  alert("Funcionalidade em desenvolvimento");
+                                }}
+                                className="w-full text-left rounded-md px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition"
+                              >
+                                Detalhes
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )})}
+                )
+              })}
             </div>
 
             {totalPages > 1 && (

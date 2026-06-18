@@ -11,7 +11,7 @@ export async function createCreditCardAction(formData: FormData) {
   const nameOnCard = String(formData.get("nameOnCard") ?? "").trim();
   const limitRaw = String(formData.get("limit") ?? "0").replace(/\D/g, "");
   const limit = Number(limitRaw) / 100;
-  
+
   const closingDay = Number(formData.get("closingDay") ?? 1);
   const dueDay = Number(formData.get("dueDay") ?? 1);
   const interestRateRaw = String(formData.get("interestRate") ?? "0");
@@ -81,7 +81,7 @@ export async function updateCreditCardAction(id: string, formData: FormData) {
   const nameOnCard = String(formData.get("nameOnCard") ?? "").trim();
   const limitRaw = String(formData.get("limit") ?? "0").replace(/\D/g, "");
   const limit = Number(limitRaw) / 100;
-  
+
   const closingDay = Number(formData.get("closingDay") ?? 1);
   const dueDay = Number(formData.get("dueDay") ?? 1);
   const interestRateRaw = String(formData.get("interestRate") ?? "0");
@@ -192,26 +192,49 @@ export async function createCreditCardTransactionAction(formData: FormData) {
     }
   }
 
-  let finalDesc = description;
-  if (notes) finalDesc += `\nObs: ${notes}`;
-  if (isRecurring) finalDesc += `\n[Recorrente]`;
+  let baseDesc = description;
+  if (notes) baseDesc += `\nObs: ${notes}`;
+  if (isRecurring) baseDesc += `\n[Recorrente]`;
 
   try {
-    await prisma.transaction.create({
-      data: {
+    const transactionsToCreate = [];
+    const installmentAmount = amount / installments;
+    const groupUid = `grp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+    for (let i = 1; i <= installments; i++) {
+      const instDate = new Date(date);
+      const targetMonth = instDate.getMonth() + (i - 1);
+      instDate.setMonth(targetMonth);
+
+      // Ajuste de segurança para meses com 28/30 dias
+      if (instDate.getMonth() !== targetMonth % 12 && targetMonth % 12 !== -1) {
+        instDate.setDate(0);
+      }
+
+      let finalDesc = baseDesc;
+      if (installments > 1) {
+        finalDesc += ` (${i}/${installments})`;
+      }
+
+      transactionsToCreate.push({
         workspaceId: workspace.id,
         userId: user.id,
         categoryId: finalCategoryId,
         accountId: mainAccount.id,
         creditCardId: card.id,
-        type: "EXPENSE",
-        status: "PENDING",
-        amount,
+        type: "EXPENSE" as const,
+        status: "PENDING" as const,
+        amount: installmentAmount,
         description: finalDesc,
-        date,
+        date: instDate,
         totalInstallments: installments > 1 ? installments : null,
-        installmentIndex: installments > 1 ? 1 : null,
-      }
+        installmentIndex: installments > 1 ? i : null,
+        installmentGroup: installments > 1 ? groupUid : null,
+      });
+    }
+
+    await prisma.transaction.createMany({
+      data: transactionsToCreate
     });
 
     revalidatePath("/financas/cartoes");

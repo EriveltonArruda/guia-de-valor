@@ -19,7 +19,13 @@ export default async function CartoesPage() {
   const cartoes = await prisma.creditCard.findMany({
     where: { workspaceId: workspace.id },
     orderBy: { createdAt: "desc" },
-    include: { transactions: true }
+    include: {
+      transactions: {
+        include: {
+          category: true // 🚀 Agora trazemos o nome da categoria!
+        }
+      }
+    }
   });
 
   const categories = await prisma.category.findMany({

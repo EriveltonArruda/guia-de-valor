@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import DividasClient from "./DividasClient";
+import LembretesClient from "./LembretesClient";
 
-export default async function DividasPage() {
+export default async function LembretesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -16,13 +16,8 @@ export default async function DividasPage() {
 
   if (!workspace) redirect("/");
 
-  const categorias = await prisma.category.findMany({
-    where: { workspaceId: workspace.id },
-    select: { id: true, name: true }
-  });
+  // Array tipado explicitamente para evitar erros de compilação implicit-any
+  const lembretes: any[] = [];
 
-  // Por enquanto, passamos vazio para focar na UI
-  const dividas: any[] = [];
-
-  return <DividasClient categorias={categorias} dividas={dividas} />;
+  return <LembretesClient lembretes={lembretes} />;
 }

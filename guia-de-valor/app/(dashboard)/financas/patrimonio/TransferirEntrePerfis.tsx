@@ -132,8 +132,8 @@ export default function TransferirEntrePerfis({
             className={[
               "inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition",
               disabled
-                ? "bg-emerald-500/30 text-emerald-300 opacity-60 cursor-not-allowed"
-                : "bg-emerald-500 hover:bg-emerald-500/90 text-black",
+                ? "bg-orange-500/30 text-emerald-300 opacity-60 cursor-not-allowed"
+                : "bg-orange-500 hover:bg-orange-500/90 text-black",
             ].join(" ")}
           >
             <ArrowLeftRight className="h-4 w-4" />

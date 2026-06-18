@@ -9,8 +9,8 @@ export function CreditCardModal({ isOpen, onClose, initialData }: { isOpen: bool
   const [loading, setLoading] = useState(false);
   const [color, setColor] = useState(initialData?.color || "#8B5CF6");
   const [limitInput, setLimitInput] = useState(
-    initialData?.limit 
-      ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(initialData.limit) 
+    initialData?.limit
+      ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(initialData.limit)
       : ""
   );
 
@@ -21,16 +21,16 @@ export function CreditCardModal({ isOpen, onClose, initialData }: { isOpen: bool
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    
+
     const formData = new FormData(e.currentTarget);
     formData.append("color", color);
-    
-    const result = initialData?.id 
-        ? await updateCreditCardAction(initialData.id, formData)
-        : await createCreditCardAction(formData);
-    
+
+    const result = initialData?.id
+      ? await updateCreditCardAction(initialData.id, formData)
+      : await createCreditCardAction(formData);
+
     setLoading(false);
-    
+
     if (result.ok) {
       toast({
         title: initialData?.id ? "Cartão atualizado" : "Cartão cadastrado",
@@ -63,7 +63,7 @@ export function CreditCardModal({ isOpen, onClose, initialData }: { isOpen: bool
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/20 text-emerald-500 rounded-lg">
+            <div className="p-2 bg-orange-500/20 text-orange-500 rounded-lg">
               <CreditCard className="w-6 h-6" />
             </div>
             <div>
@@ -81,11 +81,11 @@ export function CreditCardModal({ isOpen, onClose, initialData }: { isOpen: bool
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Nome do Cartão <span className="text-red-500">*</span></label>
-              <input name="name" defaultValue={initialData?.name} required type="text" placeholder="Ex: Nubank Principal" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <input name="name" defaultValue={initialData?.name} required type="text" placeholder="Ex: Nubank Principal" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-orange-500 outline-none" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Bandeira <span className="text-red-500">*</span></label>
-              <select name="brand" defaultValue={initialData?.brand || "Visa"} required className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-emerald-500 outline-none appearance-none">
+              <select name="brand" defaultValue={initialData?.brand || "Visa"} required className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-orange-500 outline-none appearance-none">
                 <option value="Visa">Visa</option>
                 <option value="Mastercard">Mastercard</option>
                 <option value="Elo">Elo</option>
@@ -99,35 +99,35 @@ export function CreditCardModal({ isOpen, onClose, initialData }: { isOpen: bool
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Últimos 4 dígitos</label>
-              <input name="lastFourDigits" defaultValue={initialData?.lastFourDigits} type="text" maxLength={4} placeholder="Ex: 4321" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <input name="lastFourDigits" defaultValue={initialData?.lastFourDigits} type="text" maxLength={4} placeholder="Ex: 4321" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-orange-500 outline-none" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Nome no Cartão</label>
-              <input name="nameOnCard" defaultValue={initialData?.nameOnCard} type="text" placeholder="Ex: JOÃO DA SILVA" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-emerald-500 outline-none uppercase" />
+              <input name="nameOnCard" defaultValue={initialData?.nameOnCard} type="text" placeholder="Ex: JOÃO DA SILVA" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-orange-500 outline-none uppercase" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Limite do Cartão <span className="text-red-500">*</span></label>
-              <input name="limit" required type="text" value={limitInput} onChange={handleLimitChange} placeholder="R$ 0,00" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <input name="limit" required type="text" value={limitInput} onChange={handleLimitChange} placeholder="R$ 0,00" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-orange-500 outline-none" />
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Dia Fechamento <span className="text-red-500">*</span></label>
-              <select name="closingDay" defaultValue={initialData?.closingDay || 1} required className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-emerald-500 outline-none appearance-none">
-                {Array.from({length: 31}, (_, i) => i + 1).map(day => (
+              <select name="closingDay" defaultValue={initialData?.closingDay || 1} required className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-orange-500 outline-none appearance-none">
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
                   <option key={day} value={day}>{day}</option>
                 ))}
               </select>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Dia Vencimento <span className="text-red-500">*</span></label>
-              <select name="dueDay" defaultValue={initialData?.dueDay || 1} required className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-emerald-500 outline-none appearance-none">
-                {Array.from({length: 31}, (_, i) => i + 1).map(day => (
+              <select name="dueDay" defaultValue={initialData?.dueDay || 1} required className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-orange-500 outline-none appearance-none">
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
                   <option key={day} value={day}>{day}</option>
                 ))}
               </select>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground mb-1 block">Taxa de Juros Rotativo (% a.m.)</label>
-              <input name="interestRate" defaultValue={initialData?.interestRate} type="number" step="0.01" placeholder="Ex: 14.5" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <input name="interestRate" defaultValue={initialData?.interestRate} type="number" step="0.01" placeholder="Ex: 14.5" className="w-full bg-muted border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-orange-500 outline-none" />
             </div>
             <div className="col-span-1 md:col-span-2">
               <label className="text-sm font-medium text-foreground mb-2 block">Cor do Cartão <span className="text-red-500">*</span></label>
@@ -151,7 +151,7 @@ export function CreditCardModal({ isOpen, onClose, initialData }: { isOpen: bool
           <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors">
             Cancelar
           </button>
-          <button type="submit" disabled={loading} className="px-5 py-2.5 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors shadow-sm shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center min-w-[150px]">
+          <button type="submit" disabled={loading} className="px-5 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors shadow-sm shadow-orange-500/20 disabled:opacity-50 flex items-center justify-center min-w-[150px]">
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (initialData ? "Salvar Alterações" : "Cadastrar")}
           </button>
         </div>

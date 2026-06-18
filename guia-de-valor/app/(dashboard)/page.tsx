@@ -22,7 +22,7 @@ export default async function DashboardPage(props: {
   let totalIncome = 0;
   let totalExpense = 0;
   let saldoTotal = 0;
-  
+
   let chartData: { day: string; receita: number; despesa: number }[] = [];
   let categoryExpenses: { name: string; amount: number; percentage: number; icon: string | null; iconType: string | null }[] = [];
   let recentTxs: any[] = [];
@@ -81,7 +81,7 @@ export default async function DashboardPage(props: {
 
       totalIncome = incomeAgg._sum.amount ?? 0;
       totalExpense = expenseAgg._sum.amount ?? 0;
-      
+
       // O Saldo global considera as movimentações em balanço - o ideal num app robusto é acumular os meses passados
       // mas para o escopo inicial: Initial Balance + Receitas Globais - Despesas Globais 
       saldoTotal = totalIncome - totalExpense + (workspace.initialBalance ?? 0);
@@ -97,7 +97,7 @@ export default async function DashboardPage(props: {
 
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       const tempMap: Record<number, { receita: number; despesa: number }> = {};
-      
+
       for (let i = 1; i <= daysInMonth; i++) {
         tempMap[i] = { receita: 0, despesa: 0 };
       }
@@ -110,13 +110,13 @@ export default async function DashboardPage(props: {
           tempMap[txDay].receita += tx.amount;
         } else {
           tempMap[txDay].despesa += tx.amount;
-          
+
           const catName = tx.category?.name || "Sem categoria";
           const catData = expensesCatMap.get(catName) || { amount: 0, icon: tx.category?.icon || null, iconType: tx.category?.iconType || null };
           catData.amount += tx.amount;
           if (!catData.icon && tx.category?.icon) {
-             catData.icon = tx.category.icon;
-             catData.iconType = tx.category.iconType;
+            catData.icon = tx.category.icon;
+            catData.iconType = tx.category.iconType;
           }
           expensesCatMap.set(catName, catData);
         }
@@ -130,7 +130,7 @@ export default async function DashboardPage(props: {
 
       const sortedCategories = Array.from(expensesCatMap.entries())
         .sort((a, b) => b[1].amount - a[1].amount);
-      
+
       categoryExpenses = sortedCategories.map(([name, data]) => ({
         name,
         amount: data.amount,
@@ -173,13 +173,13 @@ export default async function DashboardPage(props: {
 
         <Card className="bg-[#292B49]/40 border-white/5 shadow-none rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-emerald-500/80">Receitas</CardTitle>
-            <div className="bg-emerald-500/10 p-2 rounded-lg">
-              <ArrowUpCircle className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-orange-500/80">Receitas</CardTitle>
+            <div className="bg-orange-500/10 p-2 rounded-lg">
+              <ArrowUpCircle className="h-4 w-4 text-orange-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-500 tracking-tight">
+            <div className="text-3xl font-bold text-orange-500 tracking-tight">
               + {formatBRL(totalIncome)}
             </div>
           </CardContent>
@@ -219,7 +219,7 @@ export default async function DashboardPage(props: {
           <CardContent className="flex-1 overflow-y-auto max-h-[340px] pr-2 custom-scrollbar">
             {categoryExpenses.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-white/40 text-sm space-y-2">
-                 <p>Nenhuma despesa processada</p>
+                <p>Nenhuma despesa processada</p>
               </div>
             ) : (
               <div className="space-y-5 pt-2">
@@ -231,23 +231,23 @@ export default async function DashboardPage(props: {
                           {cat.iconType === "EMOJI" ? (
                             <span className="text-lg leading-none bg-black/20 p-1.5 rounded-md">{cat.icon}</span>
                           ) : (
-                            <span className="w-6 h-6 rounded-md bg-black/20 flex items-center justify-center border border-white/5" /> 
+                            <span className="w-6 h-6 rounded-md bg-black/20 flex items-center justify-center border border-white/5" />
                           )}
                           <span className="font-semibold text-sm truncate max-w-[120px]">{cat.name}</span>
                         </div>
                         <span className="text-white/90 font-bold">{formatBRL(cat.amount)}</span>
                       </div>
                       <div className="relative h-2.5 w-full bg-[#0b1220] rounded-full overflow-hidden border border-white/5">
-                        <div 
+                        <div
                           className="absolute left-0 top-0 h-full rounded-full group-hover:brightness-125 transition-all duration-500 ease-out"
                           style={{
                             width: `${Math.max(2, cat.percentage)}%`,
-                            background: idx === 0 ? "linear-gradient(90deg, #b91c1c, #ef4444)" : 
-                                        idx === 1 ? "linear-gradient(90deg, #c2410c, #f97316)" : 
-                                        idx === 2 ? "linear-gradient(90deg, #a16207, #eab308)" : 
-                                        idx === 3 ? "linear-gradient(90deg, #4338ca, #6366f1)" :
-                                        idx === 4 ? "linear-gradient(90deg, #0f766e, #14b8a6)" :
-                                        "#8b5cf6" 
+                            background: idx === 0 ? "linear-gradient(90deg, #b91c1c, #ef4444)" :
+                              idx === 1 ? "linear-gradient(90deg, #c2410c, #f97316)" :
+                                idx === 2 ? "linear-gradient(90deg, #a16207, #eab308)" :
+                                  idx === 3 ? "linear-gradient(90deg, #4338ca, #6366f1)" :
+                                    idx === 4 ? "linear-gradient(90deg, #0f766e, #14b8a6)" :
+                                      "#8b5cf6"
                           }}
                         />
                       </div>
@@ -275,7 +275,7 @@ export default async function DashboardPage(props: {
               {recentTxs.map((tx) => {
                 const isIncome = tx.type === "INCOME";
                 const isEmoji = tx.category?.iconType === "EMOJI";
-                
+
                 const day = String(tx.date.getUTCDate()).padStart(2, '0');
                 const monthStr = String(tx.date.getUTCMonth() + 1).padStart(2, '0');
                 const year = tx.date.getUTCFullYear();
@@ -284,11 +284,11 @@ export default async function DashboardPage(props: {
                 return (
                   <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-[#0b1220] border border-white/5 hover:bg-[#0b1220]/80 transition-colors group">
                     <div className="flex items-center gap-4">
-                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all ${isIncome ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20' : 'bg-red-500/10 group-hover:bg-red-500/20'}`}>
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all ${isIncome ? 'bg-orange-500/10 group-hover:bg-orange-500/20' : 'bg-red-500/10 group-hover:bg-red-500/20'}`}>
                         {isEmoji && tx.category?.icon ? (
                           <span className="text-2xl">{tx.category.icon}</span>
                         ) : isIncome ? (
-                          <ArrowUpRight className="h-6 w-6 text-emerald-500" />
+                          <ArrowUpRight className="h-6 w-6 text-orange-500" />
                         ) : (
                           <ArrowDownLeft className="h-6 w-6 text-red-500" />
                         )}
@@ -298,7 +298,7 @@ export default async function DashboardPage(props: {
                         <p className="text-xs text-white/50 mt-1 uppercase tracking-wide font-medium">{tx.category?.name || "Geral"} • {displayDate}</p>
                       </div>
                     </div>
-                    <div className={`text-base font-bold sm:mt-0 mt-3 sm:text-right ${isIncome ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <div className={`text-base font-bold sm:mt-0 mt-3 sm:text-right ${isIncome ? 'text-orange-500' : 'text-red-500'}`}>
                       {isIncome ? "+" : "-"} {formatBRL(tx.amount)}
                       <p className="text-[10px] text-white/30 truncate mt-0.5 font-normal tracking-wide">
                         Efetivada

@@ -48,7 +48,7 @@ export function Header() {
 
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
           <Bell className="h-5 w-5" />
-          <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-emerald-500"></span>
+          <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-orange-500"></span>
         </Button>
 
         <div className="h-6 w-px bg-border mx-2"></div>
