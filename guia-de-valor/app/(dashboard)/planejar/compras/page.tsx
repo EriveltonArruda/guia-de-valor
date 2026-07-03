@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import VeiculosClient from "./VeiculosClient";
+import ComprasClient from "./ComprasClient";
 
-export default async function VeiculosPage() {
+export default async function ComprasPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -16,16 +16,8 @@ export default async function VeiculosPage() {
 
   if (!workspace) redirect("/");
 
-  // Arrays vazios para garantir o Empty State solicitado
-  const veiculos: any[] = [];
-  const agendadas: any[] = [];
-  const historico: any[] = [];
+  // Array vazio para forçar o Empty State inicial igual ao seu Print 1
+  const comprasPlanejadas: any[] = [];
 
-  return (
-    <VeiculosClient
-      veiculos={veiculos}
-      agendadas={agendadas}
-      historico={historico}
-    />
-  );
+  return <ComprasClient compras={comprasPlanejadas} />;
 }
